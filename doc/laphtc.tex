@@ -1,0 +1,34 @@
+\documentclass[paper=a4, oneside]{memoir}
+
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts}
+\usepackage{tensor}
+\usepackage{graphicx}
+
+\chapterstyle{thatcher}
+
+
+\newcommand{\tens}[2]{\tensor{#1}{#2}}
+\newcommand{\packagename}{laphtc}
+
+
+\title{laphtc}
+\author{Christian Walther Andersen\thanks{cwandersen@imada.sdu.dk}}
+%\date{}
+
+\begin{document}
+
+\maketitle % Print the title
+
+\input{usage}
+
+\input{implementation}
+
+\input{todo}
+
+
+
+
+
+\end{document}
