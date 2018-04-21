@@ -18,9 +18,8 @@ TEST(Contract, aa) {
 
   Contraction c;
   c.addTensor('A', t1);
-  c.contract('A');
 
-  EXPECT_EQ(2.0, c.getResult());
+  EXPECT_EQ(2.0, c.contract('A'));
 }
 
 TEST(Contract, ab_ba) {
@@ -41,9 +40,7 @@ TEST(Contract, ab_ba) {
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
-  c.contract('A','B',{{0,1},{1,0}});
-
-  EXPECT_EQ(7.0, c.getResult());
+  EXPECT_EQ(7.0, c.contract('A','B',{{0,1},{1,0}}));
 }
 
 TEST(Contract, ab_ab) {
@@ -64,9 +61,7 @@ TEST(Contract, ab_ab) {
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
-  c.contract('A','B',{{0,0},{1,1}});
-
-  EXPECT_EQ(17.0, c.getResult());
+  EXPECT_EQ(17.0, c.contract('A','B',{{0,0},{1,1}}));
 }
 
 TEST(Contract, ab_bc_ca) {
@@ -92,9 +87,8 @@ TEST(Contract, ab_bc_ca) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{1,0}},'D');
-  c.contract('D','C',{{0,1},{1,0}});
 
-  EXPECT_EQ(70.0, c.getResult());
+  EXPECT_EQ(70.0, c.contract('D','C',{{0,1},{1,0}}));
 }
 
 TEST(Contract, ab_cb_ac) {
@@ -120,9 +114,8 @@ TEST(Contract, ab_cb_ac) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{1,1}},'D');
-  c.contract('D','C',{{0,0},{1,1}});
 
-  EXPECT_EQ(-41.0, c.getResult());
+  EXPECT_EQ(-41.0, c.contract('D','C',{{0,0},{1,1}}));
 }
 
 TEST(Contract, ab_ac_cb) {
@@ -148,9 +141,8 @@ TEST(Contract, ab_ac_cb) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{0,0}},'D');
-  c.contract('D','C',{{0,1},{1,0}});
 
-  EXPECT_EQ(70.0, c.getResult());
+  EXPECT_EQ(70.0, c.contract('D','C',{{0,1},{1,0}}));
 }
 
 TEST(Contract, ab_ca_cb) {
@@ -176,9 +168,8 @@ TEST(Contract, ab_ca_cb) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{0,1}},'D');
-  c.contract('D','C',{{0,1},{1,0}});
 
-  EXPECT_EQ(-21.0, c.getResult());
+  EXPECT_EQ(-21.0, c.contract('D','C',{{0,1},{1,0}}));
 }
 
 TEST(Contract, abc_bad_dc) {
@@ -210,9 +201,8 @@ TEST(Contract, abc_bad_dc) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{0,1},{1,0}},'D');
-  c.contract('D','C',{{0,1},{1,0}});
 
-  EXPECT_EQ(-28.0, c.getResult());
+  EXPECT_EQ(-28.0, c.contract('D','C',{{0,1},{1,0}}));
 
 }
 
@@ -245,9 +235,8 @@ TEST(Contract, abc_abd_cd) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{0,0},{1,1}},'D');
-  c.contract('D','C',{{0,0},{1,1}});
 
-  EXPECT_EQ(-48.0, c.getResult());
+  EXPECT_EQ(-48.0, c.contract('D','C',{{0,0},{1,1}}));
 
 }
 
@@ -280,9 +269,8 @@ TEST(Contract, abc_abd_cd2) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{1,1},{0,0}},'D');
-  c.contract('D','C',{{0,0},{1,1}});
 
-  EXPECT_EQ(-48.0, c.getResult());
+  EXPECT_EQ(-48.0, c.contract('D','C',{{0,0},{1,1}}));
 
 }
 
@@ -327,9 +315,8 @@ TEST(Contract, abcd_dcbe_ea) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{1,2},{2,1},{3,0}},'D');
-  c.contract('D','C',{{0,1},{1,0}});
 
-  EXPECT_EQ(-68.0, c.getResult());
+  EXPECT_EQ(-68.0, c.contract('D','C',{{0,1},{1,0}}));
 
 }
 
@@ -355,9 +342,7 @@ TEST(Contract, abc_cba) {
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
-  c.contract('A','B',{{0,2},{1,1},{2,0}});
-
-  EXPECT_EQ(16.0, c.getResult());
+  EXPECT_EQ(16.0, c.contract('A','B',{{0,2},{1,1},{2,0}}));
 
 }
 
@@ -390,9 +375,8 @@ TEST(Contract, abc_cd_dba) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{2,0}},'D');
-  c.contract('D','C',{{0,2},{1,1},{2,0}});
 
-  EXPECT_EQ(-75.0, c.getResult());
+  EXPECT_EQ(-75.0, c.contract('D','C',{{0,2},{1,1},{2,0}}));
 
 }
 
@@ -434,9 +418,8 @@ TEST(Contract, abcd_dce_eba) {
   c.addTensor('C', t3);
 
   c.contract('A','B',{{2,1},{3,0}},'D');
-  c.contract('D','C',{{0,2},{1,1},{2,0}});
 
-  EXPECT_EQ(17.0, c.getResult());
+  EXPECT_EQ(17.0, c.contract('D','C',{{0,2},{1,1},{2,0}}));
 
 }
 

@@ -58,17 +58,18 @@ public:
   void addTensor(char name, Tensor& tensor);
 
   /*
-   * Trace a matrix. The tensor in question needs to be rank 2 for this to work.
+   * Trace a matrix. The tensor in question needs to be rank 2 for this to
+   * work. Returns the result.
    */
-  void contract(char tensor);
+  cdouble contract(char tensor);
 
   /*
    * Contract all indices on two tensors of equal rank. The resulting number
    * is returned in the end.
    * The input list of contracted indices must be the same length as the
-   * tensor ranks.
+   * tensor ranks. Returns the result
    */
-  void contract(char tensor1, char tensor2,
+  cdouble contract(char tensor1, char tensor2,
                 std::vector<std::pair<int, int>> idx);
 
   /*
@@ -78,8 +79,6 @@ public:
   void contract(char tensor1, char tensor2,
                 std::vector<std::pair<int,int>> idx, char tensor_out);
 
-  cdouble getResult() const { return result; }
-
 private:
 
   // The collection of tensors
@@ -88,8 +87,6 @@ private:
   // Detect whether a slice needs to be transposed before matrix multiplication.
   int detectTranspose(const std::vector<int>& slice1,
                       const std::vector<int>& slice2);
-
-  cdouble result;
 
 };
 

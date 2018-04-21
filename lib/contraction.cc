@@ -82,16 +82,16 @@ int Contraction::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
-void Contraction::contract(char tensor) {
+cdouble Contraction::contract(char tensor) {
   // Simply grab the data from the tensor and take the trace
   Tensor t = tensors.at(tensor);
   cdouble data[t.size()*t.size()];
   t.getSlice({-1,-1},data);
-  result += trace(cx_mat(data, t.size(), t.size()));
+  return trace(cx_mat(data, t.size(), t.size()));
 }
 
-void Contraction::contract(char tensor1, char tensor2,
-                           std::vector<std::pair<int, int>> idx) {
+cdouble Contraction::contract(char tensor1, char tensor2,
+                              std::vector<std::pair<int, int>> idx) {
 
   /*
    * Contractions on the form
@@ -116,6 +116,8 @@ void Contraction::contract(char tensor1, char tensor2,
   cdouble data1[t1.size()*t1.size()];
   cdouble data2[t2.size()*t2.size()];
 
+  cdouble result = 0.0;
+
   // Loop over the non-sliced contracted indices
   do {
 
@@ -138,6 +140,8 @@ void Contraction::contract(char tensor1, char tensor2,
 
     // Increase the contracted indices on the two input slices
   } while (it.nextContracted());
+
+  return result;
 
 }
 
