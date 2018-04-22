@@ -20,4 +20,5 @@ include_directories(${ARMADILLO_INCLUDE_DIRS})
 # --- Testing -------------------------------------------------------
 
 enable_testing()
-add_subdirectory(test)
+add_subdirectory(test/unit)
+add_subdirectory(test/bench)
