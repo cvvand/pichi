@@ -13,7 +13,7 @@
 #include <chrono>
 
 #define N 10
-#define P 2
+#define P 10
 #define SIZE 64
 
 using namespace pichi;

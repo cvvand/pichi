@@ -49,6 +49,8 @@ add_executable(all_ut
         test_contract.cc
         test_slice_iterator.cc
         test_tensor.cc
+        test_tensor_getsetslice.cc
+        test_tensor_storage.cc
         )
 target_link_libraries(all_ut
         gtest_main

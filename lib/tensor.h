@@ -18,8 +18,10 @@ namespace pichi {
  * dimension of any given tensor is the same.
  * As an example, a square matrix of size N x N is a tensor of rank 2 and
  * size N.
+ * This tensor class does not support tensors of rank 1 (vectors) or 0
+ * (scalars). The minimum rank is 2.
  *
- * We interact with tensors in "slices". A slice is a 1 or 2-dimensional
+ * We interact with tensors in "slices". A slice is a 2-dimensional
  * piece of the tensor, which we can access and modify. This allows us to
  * "extract a matrix from a tensor", enabling the use of highly optimised
  * linear algebra code for doing tensor contractions.
@@ -28,8 +30,20 @@ namespace pichi {
  *    (3, 11, *, 0, *)
  * The numbers in the tuple define the "fixed" indices of the tensor, while
  * the asterisks define the "running" indices.
- * For 1 and 2-dimensional tensors, the slices are simply the entire tensor.
+ * For 2-dimensional tensors, the slices are simply the entire tensor.
  * For tensors of rank 3 or more, only 2-dimensional slices and be accessed.
+ *
+ * "Under the hood" the data in the tensor is stored in a single array. When
+ * accessing a slice of the tensor, it is not always possible to simply copy
+ * one consecutive piece of the underlying array. The way the data is stored
+ * in the tensor can be accessed and changed and is indicated by an array.
+ * For a rank 4 tensor, the following example "storage tensor"
+ *   (2,3,0,1)
+ * indicates that the leading dimension of the tensor is dimension 2, then 3
+ * etc. This means that it is particularly easy to obtain the slices
+ * (0,0,*,*) (and similarly with 0 changed to something else) since they are
+ * already in the leading dimension of the underlying data array.
+ * Default storage is (0,1,...,R-1), where R is the tensor rank.
  *
  *
  * ***********************************************************************/
@@ -42,15 +56,21 @@ public:
 
   /*
    * Default constructor
-   * Creates a 2x2 tensor with all elements set to 0
+   * Creates a 2x2 tensor with all elements set to 0. Uses default storage.
    */
   Tensor();
 
   /*
    * Creates a tensor with a given rank and size.
+   * All elements in the tensor will be initialised to 0. Uses default storage.
+   */
+  Tensor(int rank, int size);
+
+  /*
+   * Creates a tensor with a given rank and size and with a set storage vector.
    * All elements in the tensor will be initialised to 0.
    */
-  explicit Tensor(int rank, int size);
+  Tensor(int rank, int size, const std::vector<int>& store);
 
   /*
    * Copy constructor
@@ -94,7 +114,6 @@ public:
   ~Tensor() noexcept;
 
 
-
   // --- Data ------------------------------------------------------------
 
   /*
@@ -112,9 +131,14 @@ public:
    * In the actual input the * above should be replaced by a negative number,
    * signifying a running index.
    *
-   * For a rank 0 tensor, this call has no effect.
+   * For a rank 2 tensor, the slice will be the entire tensor.
    *
-   * For a rank 1 or a rank 2 tensor, the slice will be the entire tensor.
+   * Note that if the tensor data is stored such that the slice lies along
+   * the leading dimensions of the tensor, the functions will be able to copy
+   * a large segment of the underlying data structure in one go and the call
+   * will return more quickly. Consider setting the storage vector
+   * appropriately before a getting a number of slices along the same
+   * dimensions.
    *
    * GET: The tensor data will be copied to the input buffer and decoupled from
    * the actual tensor. Therefore, any changes made to the buffer will not
@@ -126,12 +150,27 @@ public:
    * not modify the data in the buffer, and changes made to the buffer will
    * have no effect on the tensor.
    *
-   * During the calls the data in the tensor might be restructured in order to
-   * facilitate similar calls at a later time. The runtime of this function
-   * can therefore vary a lot.
    */
-  void getSlice(const std::vector<int>&, cdouble*);
+  void getSlice(const std::vector<int>&, cdouble*) const;
   void setSlice(const std::vector<int>&, cdouble*);
+
+
+  // --- Data storage ---------------------------------------------------
+
+  /*
+   * Gets or sets the storage vector.
+   * The storage vector explains how the underlying data is stored. For a
+   * storage vector like
+   *    (3,1,0,2)
+   * the leading dimension of the underlying data structure is dimension 3 of
+   * the actual tensor, then dimension 1 etc.
+   * When setting the storage vector, the data will be reallocated if the
+   * storage is different from the current one and if the data has been
+   * modified (no need to reallocate a bunch of 0's).
+   */
+  std::vector<int> getStorage() const;
+  void setStorage(const std::vector<int>& store);
+
 
 
   // --- Tensor details --------------------------------------------------
@@ -146,7 +185,11 @@ public:
    */
   int size() const { return n; };
 
-private:
+private: // --------------------------------------------------------------
+
+  /* Set or get a single element in the tensor by index */
+  cdouble getElement(const std::vector<int>& index) const;
+  void setElement(const std::vector<int>& index, cdouble value);
 
   /* The dimensions of the tensor */
   int dim;
@@ -155,6 +198,11 @@ private:
   /* The actual data in the tensor */
   cdouble* data;
 
+  /* Storage information on data */
+  std::vector<int> storage;
+
+  /* Whether the data has been modified yet */
+  bool modified;
 };
 
 }
