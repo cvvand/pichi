@@ -28,7 +28,7 @@ void Contraction::removeTensor(char tensor) {
 }
 
 int Contraction::detectTranspose(const std::vector<int>& slice1,
-                                 const std::vector<int>& slice2) {
+                                 const std::vector<int>& slice2) const {
 
   /*
    * This function detects whether a slice of a tensor needs to be transposed
@@ -90,7 +90,7 @@ int Contraction::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
-cdouble Contraction::contract(char tensor) {
+cdouble Contraction::contract(char tensor) const {
   // Simply grab the data from the tensor and take the trace
   Tensor t = tensors.at(tensor);
   cdouble data[t.size()*t.size()];
@@ -99,7 +99,7 @@ cdouble Contraction::contract(char tensor) {
 }
 
 cdouble Contraction::contract(char tensor1, char tensor2,
-                              std::vector<std::pair<int, int>> idx) {
+                              std::vector<std::pair<int, int>> idx) const {
 
   /*
    * Contractions on the form
