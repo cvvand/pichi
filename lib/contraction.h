@@ -53,9 +53,21 @@ class Contraction {
 public:
 
   /*
-   * Add a tensor to the collection with a given name.
+   * Add a tensor to the collection with a given name. The name has to be
+   * unique.
    */
   void addTensor(char name, Tensor& tensor);
+
+  /*
+   * Get a tensor reference from the collection. This can be used to modify
+   * the tensor after insertion.
+   */
+  Tensor& getTensor(char tensor);
+
+  /*
+   * Remove a tensor from the collection, if it exists.
+   */
+  void removeTensor(char tensor);
 
   /*
    * Trace a matrix. The tensor in question needs to be rank 2 for this to

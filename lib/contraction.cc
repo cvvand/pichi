@@ -19,6 +19,14 @@ void Contraction::addTensor(char name, Tensor& tensor) {
   tensors.insert({name,tensor});
 }
 
+Tensor& Contraction::getTensor(char tensor) {
+  return tensors.at(tensor);
+}
+
+void Contraction::removeTensor(char tensor) {
+  tensors.erase('A');
+}
+
 int Contraction::detectTranspose(const std::vector<int>& slice1,
                                  const std::vector<int>& slice2) {
 

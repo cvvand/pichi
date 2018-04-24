@@ -130,6 +130,8 @@ public:
    *
    * In the actual input the * above should be replaced by a negative number,
    * signifying a running index.
+   * We assume always that the first running index is the leading dimension
+   * of the array.
    *
    * For a rank 2 tensor, the slice will be the entire tensor.
    *
