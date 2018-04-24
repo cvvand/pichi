@@ -16,7 +16,7 @@ TEST(Contract, aa) {
   data[0] = 3.0; data[1] = 3.0; data[2] = 3.0; data[3] = -1.0;
   t1.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
 
   EXPECT_EQ(2.0, c.contract('A'));
@@ -36,7 +36,7 @@ TEST(Contract, ab_ba) {
   data[6] = 3.0; data[7] = 3.0; data[8] = -3.0;
   t2.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
@@ -57,7 +57,7 @@ TEST(Contract, ab_ab) {
   data[6] = 3.0; data[7] = 3.0; data[8] = -3.0;
   t2.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
@@ -81,7 +81,7 @@ TEST(Contract, ab_bc_ca) {
   data[2] = 1.0; data[3] = 3.0;
   t3.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -108,7 +108,7 @@ TEST(Contract, ab_cb_ac) {
   data[2] = 1.0; data[3] = 3.0;
   t3.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -135,7 +135,7 @@ TEST(Contract, ab_ac_cb) {
   data[2] = 1.0; data[3] = 3.0;
   t3.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -162,7 +162,7 @@ TEST(Contract, ab_ca_cb) {
   data[2] = 1.0; data[3] = 3.0;
   t3.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -195,7 +195,7 @@ TEST(Contract, abc_bad_dc) {
   data[2] = 2.0; data[3] = -1.0;
   t3.setSlice({-1,-1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -229,7 +229,7 @@ TEST(Contract, abc_abd_cd) {
   data[2] = 2.0; data[3] = -1.0;
   t3.setSlice({-1,-1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -263,7 +263,7 @@ TEST(Contract, abc_abd_cd2) {
   data[2] = 2.0; data[3] = -1.0;
   t3.setSlice({-1,-1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -309,7 +309,7 @@ TEST(Contract, abcd_dcbe_ea) {
   data[2] = 2.0; data[3] = -1.0;
   t3.setSlice({-1,-1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -338,7 +338,7 @@ TEST(Contract, abc_cba) {
   data[2] = 2.0; data[3] = 3.0;
   t2.setSlice({-1,-1,1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
 
@@ -369,7 +369,7 @@ TEST(Contract, abc_cd_dba) {
   data[2] = 2.0; data[3] = 3.0;
   t3.setSlice({-1,-1,1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);
@@ -412,7 +412,7 @@ TEST(Contract, abcd_dce_eba) {
   data[2] = 2.0;  data[3] = -2.0;
   t3.setSlice({-1,-1,1}, data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   c.addTensor('B', t2);
   c.addTensor('C', t3);

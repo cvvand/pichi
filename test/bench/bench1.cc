@@ -70,13 +70,13 @@ void header() {
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
 
   cout << " ------------------------------ " << endl << endl;
-  cout << "#\tc/sec\tbd/sec\tae/sec\tT_tot/sec" << endl;
+  cout << "#\tTime/sec" << endl;
   cout << "------------" << endl;
+
 }
 
-void writeRun(int n, double et1, double et2, double et3, double etot) {
-  cout << setprecision(3) << n << "\t" << et1 << "\t" << et2 << "\t" << et3
-       << "\t" << etot << endl;
+void writeRun(int n, double etot) {
+  cout << setprecision(3) << n << "\t" << etot << endl;
 }
 
 void report(vector<double> times) {
@@ -98,7 +98,8 @@ int main() {
 
     // Contract random tensors of pattern A_abc B_cd C_dbe D_ae
 
-    Tensor a(3, SIZE);
+    Tensor a(3, SIZE, {0,2,1});
+    //Tensor a(3, SIZE);
     Tensor b(2, SIZE);
     Tensor c(3, SIZE);
     Tensor d(2, SIZE);
@@ -108,7 +109,7 @@ int main() {
     fill3(c);
     fill2(d);
 
-    Contraction con;
+    Contraction<char> con;
     con.addTensor('A', a);
     con.addTensor('B', b);
     con.addTensor('C', c);
@@ -117,24 +118,16 @@ int main() {
     auto start = chrono::steady_clock::now();
 
     con.contract('A', 'B', {{2, 0}}, 'E'); // E_abd
-    auto c1 = chrono::steady_clock::now();
-
+    con.getTensor('E').setStorage({1,2,0});
     con.contract('E', 'C', {{1, 1}, {2, 0}}, 'F'); // F_ae
-    auto c2 = chrono::steady_clock::now();
-
     con.contract('F', 'D', {{0, 0}, {1, 1}});
     auto end = chrono::steady_clock::now();
 
-    double et1 = chrono::duration_cast<
-        chrono::duration<double>>(c1-start).count();
-    double et2 = chrono::duration_cast<
-        chrono::duration<double>>(c2-c1).count();
-    double et3 = chrono::duration_cast<
-        chrono::duration<double>>(end-c2).count();
-    double et_tot = et1 + et2 + et3;
+    double et_tot = chrono::duration_cast<
+        chrono::duration<double>>(end-start).count();
     if (i >= 0) {
       times.push_back(et_tot);
-      writeRun(i, et1, et2, et3, et_tot);
+      writeRun(i, et_tot);
     }
 
   }

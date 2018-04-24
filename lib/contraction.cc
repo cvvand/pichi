@@ -15,20 +15,24 @@ using namespace arma;
 
 namespace pichi {
 
-void Contraction::addTensor(char name, Tensor& tensor) {
+template <class Key>
+void Contraction<Key>::addTensor(Key name, Tensor& tensor) {
   tensors.insert({name,tensor});
 }
 
-Tensor& Contraction::getTensor(char tensor) {
+template <class Key>
+Tensor& Contraction<Key>::getTensor(Key tensor) {
   return tensors.at(tensor);
 }
 
-void Contraction::removeTensor(char tensor) {
+template <class Key>
+void Contraction<Key>::removeTensor(Key tensor) {
   tensors.erase('A');
 }
 
-int Contraction::detectTranspose(const std::vector<int>& slice1,
-                                 const std::vector<int>& slice2) const {
+template <class Key>
+int Contraction<Key>::detectTranspose(const std::vector<int>& slice1,
+                                      const std::vector<int>& slice2) const {
 
   /*
    * This function detects whether a slice of a tensor needs to be transposed
@@ -90,7 +94,8 @@ int Contraction::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
-cdouble Contraction::contract(char tensor) const {
+template <class Key>
+cdouble Contraction<Key>::contract(Key tensor) const {
   // Simply grab the data from the tensor and take the trace
   Tensor t = tensors.at(tensor);
   cdouble data[t.size()*t.size()];
@@ -98,7 +103,8 @@ cdouble Contraction::contract(char tensor) const {
   return trace(cx_mat(data, t.size(), t.size()));
 }
 
-cdouble Contraction::contract(char tensor1, char tensor2,
+template <class Key>
+cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
                               std::vector<std::pair<int, int>> idx) const {
 
   /*
@@ -153,10 +159,10 @@ cdouble Contraction::contract(char tensor1, char tensor2,
 
 }
 
-
-void Contraction::contract(char tensor1, char tensor2,
+template <class Key>
+void Contraction<Key>::contract(Key tensor1, Key tensor2,
                            std::vector<std::pair<int, int>> idx,
-                           char tensor_out) {
+                           Key tensor_out) {
 
   /*
    * Contractions on the form
@@ -269,5 +275,10 @@ void Contraction::contract(char tensor1, char tensor2,
 
 }
 
+/*
+ * Add support for key values: char, int
+ */
+template class Contraction<char>;
+template class Contraction<int>;
 
 }

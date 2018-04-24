@@ -18,7 +18,7 @@ TEST(ContractionCollection, AlterTensorAfterInsertion) {
   data[0] = 3.0; data[1] = 3.0; data[2] = 3.0; data[3] = -1.0;
   t1.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   EXPECT_EQ(2.0, c.contract('A'));
 
@@ -35,7 +35,7 @@ TEST(ContractionCollection, RemoveTensorAfterInsertion) {
   data[0] = 3.0; data[1] = 3.0; data[2] = 3.0; data[3] = -1.0;
   t1.setSlice({-1,-1},data);
 
-  Contraction c;
+  Contraction<char> c;
   c.addTensor('A', t1);
   EXPECT_EQ(2.0, c.contract('A'));
 

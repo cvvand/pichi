@@ -48,6 +48,7 @@ namespace pichi {
  *
  * ***********************************************************************/
 
+template <class Key>
 class Contraction {
 
 public:
@@ -56,24 +57,24 @@ public:
    * Add a tensor to the collection with a given name. The name has to be
    * unique.
    */
-  void addTensor(char name, Tensor& tensor);
+  void addTensor(Key name, Tensor& tensor);
 
   /*
    * Get a tensor reference from the collection. This can be used to modify
    * the tensor after insertion.
    */
-  Tensor& getTensor(char tensor);
+  Tensor& getTensor(Key tensor);
 
   /*
    * Remove a tensor from the collection, if it exists.
    */
-  void removeTensor(char tensor);
+  void removeTensor(Key tensor);
 
   /*
    * Trace a matrix. The tensor in question needs to be rank 2 for this to
    * work. Returns the result.
    */
-  cdouble contract(char tensor) const;
+  cdouble contract(Key tensor) const;
 
   /*
    * Contract all indices on two tensors of equal rank. The resulting number
@@ -81,20 +82,20 @@ public:
    * The input list of contracted indices must be the same length as the
    * tensor ranks. Returns the result
    */
-  cdouble contract(char tensor1, char tensor2,
+  cdouble contract(Key tensor1, Key tensor2,
                 std::vector<std::pair<int, int>> idx) const;
 
   /*
    * Contract a number of indices on two tensors in the collection. The
    * resulting tensor is added to the collection with a given name.
    */
-  void contract(char tensor1, char tensor2,
-                std::vector<std::pair<int,int>> idx, char tensor_out);
+  void contract(Key tensor1, Key tensor2,
+                std::vector<std::pair<int,int>> idx, Key tensor_out);
 
 private:
 
   // The collection of tensors
-  std::unordered_map<char, Tensor> tensors;
+  std::unordered_map<Key, Tensor> tensors;
 
   // Detect whether a slice needs to be transposed before matrix multiplication.
   int detectTranspose(const std::vector<int>& slice1,
