@@ -95,17 +95,49 @@ int Contraction<Key>::detectTranspose(const std::vector<int>& slice1,
 }
 
 template <class Key>
-cdouble Contraction<Key>::contract(Key tensor) const {
-  // Simply grab the data from the tensor and take the trace
+cdouble Contraction<Key>::contract(Key tensor,
+                                   const std::vector<
+                                       std::pair<int,int>>& idx) const {
+
+
   Tensor t = tensors.at(tensor);
   cdouble data[t.size()*t.size()];
-  t.getSlice({-1,-1},data);
-  return trace(cx_mat(data, t.size(), t.size()));
+  cdouble res = 0.0;
+
+  // Slice along the first index pair, iterate on the rest
+  vector<int> slice(t.rank(),0);
+  slice[idx[0].first] = -1; slice[idx[0].second] = -1;
+
+  bool flag = false;
+  while(!flag) {
+    // Add this trace
+    t.getSlice(slice,data);
+    res += trace(cx_mat(data, t.size(), t.size()));
+
+    // Update non sliced indices
+    flag = true;
+    for (int i = 1; i < idx.size() && flag; ++i) {
+      // Try to update i'th pair of indices
+      int z = ++slice[idx[i].first];
+      if (z == t.size()) {
+        // Roll over i'th pair of indices
+        slice[idx[i].first] = 0;
+        slice[idx[i].second] = 0;
+      } else {
+        // No roll over, escape the loop and do the trace
+        ++slice[idx[i].second];
+        flag = false;
+      }
+    }
+  }
+
+  return res;
 }
 
 template <class Key>
 cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
-                              std::vector<std::pair<int, int>> idx) const {
+                                   const std::vector<
+                                       std::pair<int, int>>& idx) const {
 
   /*
    * Contractions on the form
@@ -161,8 +193,9 @@ cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
 
 template <class Key>
 void Contraction<Key>::contract(Key tensor1, Key tensor2,
-                           std::vector<std::pair<int, int>> idx,
-                           Key tensor_out) {
+                                const std::vector<
+                                    std::pair<int, int>>& idx,
+                                Key tensor_out) {
 
   /*
    * Contractions on the form

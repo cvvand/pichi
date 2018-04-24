@@ -19,13 +19,12 @@ namespace pichi {
  * is the trace operation, which is a unary operation on a rank 2 tensor.
  *
  * To contract tensors using this class, they have to be added to the
- * collection with a name. After this there are three contraction
+ * collection with a name. After this there are two contraction
  * operations one can perform:
  *
- * 1) Simply tracing a single rank 2 tensor and getting the result returned.
- * 2) Contracting all indices on two tensors in the collection, also
+ * 1) Contracting all indices on one or two tensors in the collection,
  * resulting in an output number.
- * 3) Contracting some indices on two tensors in the collection, creating a
+ * 2) Contracting some indices on two tensors in the collection, creating a
  * new tensor from the result. The result is added to the collection, so it
  * can be used for more contractions later. This gives no output.
  *
@@ -71,10 +70,11 @@ public:
   void removeTensor(Key tensor);
 
   /*
-   * Trace a matrix. The tensor in question needs to be rank 2 for this to
-   * work. Returns the result.
+   * Contracts all indices on a single tensor, resulting in a number. For a
+   * rank 2 tensor, this is just the trace.
    */
-  cdouble contract(Key tensor) const;
+  cdouble contract(Key tensor,
+                   const std::vector<std::pair<int, int>>& idx) const;
 
   /*
    * Contract all indices on two tensors of equal rank. The resulting number
@@ -83,14 +83,14 @@ public:
    * tensor ranks. Returns the result
    */
   cdouble contract(Key tensor1, Key tensor2,
-                std::vector<std::pair<int, int>> idx) const;
+                const std::vector<std::pair<int, int>>& idx) const;
 
   /*
    * Contract a number of indices on two tensors in the collection. The
    * resulting tensor is added to the collection with a given name.
    */
   void contract(Key tensor1, Key tensor2,
-                std::vector<std::pair<int,int>> idx, Key tensor_out);
+                const std::vector<std::pair<int,int>>& idx, Key tensor_out);
 
 private:
 
