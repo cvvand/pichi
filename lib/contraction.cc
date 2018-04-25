@@ -94,23 +94,55 @@ int Contraction<Key>::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
+template<class Key>
+void Contraction<Key>::setStorage(Tensor& tensor,
+                                  const std::vector<int> slicing) {
+
+  vector<int> storage = tensor.getStorage(); // The current storage
+  int count = 0; // The currently found number of sliced indices
+  for (int i = 0; count < 2; ++i) { // Find the 2 sliced indices
+    // The index is sliced if the slice value is negative.
+    if (slicing[i] < 0) {
+      // The storage vector should have "i" at the current count.
+      if (storage[count] != i) {
+        // The storage vector has another value where it should be i, so we
+        // find the current position of the i
+        int current_pos = 0;
+        while (storage[current_pos] != i)
+          ++current_pos;
+        // Now swap the i into the right position, putting the current value
+        // where the i is now.
+        int temp = storage[count];
+        storage[count] = i;
+        storage[current_pos] = temp;
+      }
+      ++count;
+    }
+  }
+  tensor.setStorage(storage);
+
+}
+
 template <class Key>
 cdouble Contraction<Key>::contract(Key tensor,
                                    const std::vector<
-                                       std::pair<int,int>>& idx) const {
+                                       std::pair<int,int>>& idx) {
 
 
-  Tensor t = tensors.at(tensor);
-  cdouble data[t.size()*t.size()];
+  Tensor* t = &tensors.at(tensor);
+  cdouble data[t->size()*t->size()];
   cdouble res = 0.0;
 
   // Set up slice iterator
-  SingleSliceIterator it(t.rank(), t.size(), idx);
+  SingleSliceIterator it(t->rank(), t->size(), idx);
+
+  // Set storage
+  setStorage(*t, it.getSlice1());
 
   do {
 
-    t.getSlice(it.getSlice1(), data);
-    res += trace(cx_mat(data, t.size(), t.size()));
+    t->getSlice(it.getSlice1(), data);
+    res += trace(cx_mat(data, t->size(), t->size()));
 
   } while (it.nextContracted());
 
@@ -120,7 +152,7 @@ cdouble Contraction<Key>::contract(Key tensor,
 template <class Key>
 cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
                                    const std::vector<
-                                       std::pair<int, int>>& idx) const {
+                                       std::pair<int, int>>& idx) {
 
   /*
    * Contractions on the form
@@ -131,19 +163,23 @@ cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
    */
 
   // Get the tensors in question
-  Tensor t1 = tensors.at(tensor1);
-  Tensor t2 = tensors.at(tensor2);
+  Tensor* t1 = &tensors.at(tensor1);
+  Tensor* t2 = &tensors.at(tensor2);
 
   // Set up the iterator
-  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
+  DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
+
+  // Make sure tensor data is stored appropriately in the input tensors
+  setStorage(*t1, it.getSlice1());
+  setStorage(*t2, it.getSlice2());
 
   // Detect whether transposition is needed (sliced indices will not change
   // during iteration)
   int transpose_type = detectTranspose(it.getSlice1(),it.getSlice2());
 
   // Containers for the data for matrix multiplication
-  cdouble data1[t1.size()*t1.size()];
-  cdouble data2[t2.size()*t2.size()];
+  cdouble data1[t1->size()*t1->size()];
+  cdouble data2[t2->size()*t2->size()];
 
   cdouble result = 0.0;
 
@@ -151,10 +187,10 @@ cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
   do {
 
     // Get the current slice in matrix form
-    t1.getSlice(it.getSlice1(), data1);
-    t2.getSlice(it.getSlice2(), data2);
-    cx_mat m1(data1, t1.size(), t1.size());
-    cx_mat m2(data2, t2.size(), t2.size());
+    t1->getSlice(it.getSlice1(), data1);
+    t2->getSlice(it.getSlice2(), data2);
+    cx_mat m1(data1, t1->size(), t1->size());
+    cx_mat m2(data2, t2->size(), t2->size());
 
     if (transpose_type == 0 || transpose_type == 3) {
       // The two types are degenerate from this property of the trace:
@@ -188,17 +224,32 @@ void Contraction<Key>::contract(Key tensor1,
 
 
   // Get the tensors in question
-  Tensor t1 = tensors.at(tensor1);
+  Tensor* t1 = &tensors.at(tensor1);
 
-  // Get the number of free indices and create the output tensor
-  int free_out = t1.rank() - 2*idx.size();
-  Tensor t_out(free_out, t1.size());
+  // Get the number of free indices
+  int free_out = t1->rank() - 2*idx.size();
 
   // Set up the iterator
-  SingleSliceIterator it(t1.rank(), t1.size(), idx);
+  SingleSliceIterator it(t1->rank(), t1->size(), idx);
+
+  // Set storage for input tensor
+  setStorage(*t1, it.getSlice1());
+
+  // Set storage for output tensor
+  vector<int> storage_out(free_out, 0);
+  int count1 = 0;
+  int count2 = 2;
+  for (int i = 0; i < free_out; ++i) {
+    if (it.getSliceOut()[i] < 0)
+      storage_out[count1++] = i;
+    else
+      storage_out[count2++] = i;
+  }
+  // Create output tensor
+  Tensor t_out(free_out, t1->size(), storage_out);
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1.size() * t1.size()];
+  cdouble data1[t1->size() * t1->size()];
   cdouble data_out[t_out.size() * t_out.size()];
 
   do { // Loop over non-sliced free indices on the output tensor
@@ -213,9 +264,9 @@ void Contraction<Key>::contract(Key tensor1,
       do { // Loop through contracted, non-sliced indices on input tensors
 
         // Get the current slices in matrix form
-        t1.getSlice(it.getSlice1(), data1);
+        t1->getSlice(it.getSlice1(), data1);
 
-        data_out[x] += trace(cx_mat(data1, t1.size(), t1.size()));
+        data_out[x] += trace(cx_mat(data1, t1->size(), t1->size()));
 
         // Increase the contracted non-sliced indices on input tensors
       } while (it.nextContracted());
@@ -262,22 +313,39 @@ void Contraction<Key>::contract(Key tensor1, Key tensor2,
    */
 
   // Get the tensors in question
-  Tensor t1 = tensors.at(tensor1);
-  Tensor t2 = tensors.at(tensor2);
+  Tensor* t1 = &tensors.at(tensor1);
+  Tensor* t2 = &tensors.at(tensor2);
 
-  // Get the number of free indices and create the output tensor
-  int free_out = t1.rank() + t2.rank() - 2*idx.size();
-  Tensor t_out(free_out, t1.size());
+  // Get the number of free indices
+  int free_out = t1->rank() + t2->rank() - 2*idx.size();
 
   // Set up the iterator
-  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
+  DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
+
+  // Make sure tensor data is stored appropriately in the input tensors
+  setStorage(*t1, it.getSlice1());
+  setStorage(*t2, it.getSlice2());
+
+  // Set the storage for the output tensor
+  vector<int> storage_out(free_out, 0);
+  int count1 = 0;
+  int count2 = 2;
+  for (int i = 0; i < free_out; ++i) {
+    if (it.getSliceOut()[i] < 0)
+      storage_out[count1++] = i;
+    else
+      storage_out[count2++] = i;
+  }
+  // Create output tensor
+  Tensor t_out(free_out, t1->size(), storage_out);
+
   // Figure out if we need to transpose matrices (sliced indices do not
   // change during iteration)
   int transpose_type = detectTranspose(it.getSlice1(), it.getSlice2());
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1.size() * t1.size()];
-  cdouble data2[t2.size() * t2.size()];
+  cdouble data1[t1->size() * t1->size()];
+  cdouble data2[t2->size() * t2->size()];
   cdouble data_out[t_out.size() * t_out.size()];
 
   do { // Loop through free indices, not sliced on the output tensor
@@ -295,10 +363,10 @@ void Contraction<Key>::contract(Key tensor1, Key tensor2,
         do { // Loop through contracted, non-sliced indices on input tensors
 
           // Get the current slices in matrix form
-          t1.getSlice(it.getSlice1(), data1);
-          t2.getSlice(it.getSlice2(), data2);
-          cx_mat m1(data1, t1.size(), t1.size());
-          cx_mat m2(data2, t2.size(), t2.size());
+          t1->getSlice(it.getSlice1(), data1);
+          t2->getSlice(it.getSlice2(), data2);
+          cx_mat m1(data1, t1->size(), t1->size());
+          cx_mat m2(data2, t2->size(), t2->size());
 
           // Some types are degenerate, see comments in
           // contract(char,char,vector)
@@ -323,10 +391,10 @@ void Contraction<Key>::contract(Key tensor1, Key tensor2,
       // Mult branch
 
       // Get the current slices in matrix form
-      t1.getSlice(it.getSlice1(), data1);
-      t2.getSlice(it.getSlice2(), data2);
-      cx_mat m1(data1, t1.size(), t1.size());
-      cx_mat m2(data2, t2.size(), t2.size());
+      t1->getSlice(it.getSlice1(), data1);
+      t2->getSlice(it.getSlice2(), data2);
+      cx_mat m1(data1, t1->size(), t1->size());
+      cx_mat m2(data2, t2->size(), t2->size());
 
       cx_mat mout; // The output slice in matrix form.
       // Do the multiplication based on transpose type

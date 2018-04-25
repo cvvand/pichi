@@ -97,9 +97,7 @@ int main() {
   for (int i = -P; i < N; ++i) {
 
     // Contract random tensors of pattern A_abc B_cd C_dbe D_ae
-
-    Tensor a(3, SIZE, {0,2,1});
-    //Tensor a(3, SIZE);
+    Tensor a(3, SIZE);
     Tensor b(2, SIZE);
     Tensor c(3, SIZE);
     Tensor d(2, SIZE);
@@ -118,7 +116,6 @@ int main() {
     auto start = chrono::steady_clock::now();
 
     con.contract('A', 'B', {{2, 0}}, 'E'); // E_abd
-    con.getTensor('E').setStorage({1,2,0});
     con.contract('E', 'C', {{1, 1}, {2, 0}}, 'F'); // F_ae
     con.contract('F', 'D', {{0, 0}, {1, 1}});
     auto end = chrono::steady_clock::now();

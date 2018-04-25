@@ -75,7 +75,7 @@ public:
    * rank 2 tensor, this is just the trace.
    */
   cdouble contract(Key tensor,
-                   const std::vector<std::pair<int, int>>& idx) const;
+                   const std::vector<std::pair<int, int>>& idx);
 
   /*
    * Contract all indices on two tensors of equal rank. The resulting number
@@ -84,7 +84,7 @@ public:
    * tensor ranks. Returns the result
    */
   cdouble contract(Key tensor1, Key tensor2,
-                const std::vector<std::pair<int, int>>& idx) const;
+                const std::vector<std::pair<int, int>>& idx);
 
   /*
    * Contract a number of indices on a tensor in the collection. The
@@ -104,6 +104,8 @@ private:
 
   // The collection of tensors
   std::unordered_map<Key, Tensor> tensors;
+
+  void setStorage(Tensor& tensor, const std::vector<int> slicing);
 
   // Detect whether a slice needs to be transposed before matrix multiplication.
   int detectTranspose(const std::vector<int>& slice1,

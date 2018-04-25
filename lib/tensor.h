@@ -167,8 +167,7 @@ public:
    * the leading dimension of the underlying data structure is dimension 3 of
    * the actual tensor, then dimension 1 etc.
    * When setting the storage vector, the data will be reallocated if the
-   * storage is different from the current one and if the data has been
-   * modified (no need to reallocate a bunch of 0's).
+   * storage is different from the current one.
    */
   std::vector<int> getStorage() const;
   void setStorage(const std::vector<int>& store);
@@ -202,9 +201,6 @@ private: // --------------------------------------------------------------
 
   /* Storage information on data */
   std::vector<int> storage;
-
-  /* Whether the data has been modified yet */
-  bool modified;
 };
 
 }

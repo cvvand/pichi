@@ -20,7 +20,6 @@ Tensor::Tensor() :
     dim(2), n(2), data(new cdouble[4]) {
 
   storage = {0,1};
-  modified = false;
 
   data[0] = 0.0; data[1] = 0.0;
   data[2] = 0.0; data[3] = 0.0;
@@ -48,8 +47,6 @@ Tensor::Tensor(int rank, int size) :
   for (int i = 0; i < rank; ++i)
     storage[i] = i;
 
-  modified = false;
-
 }
 
 Tensor::Tensor(int rank, int size, const std::vector<int>& store) :
@@ -76,8 +73,6 @@ Tensor::Tensor(const Tensor& other) :
   // Copy storage information
   storage = other.storage;
 
-  modified = other.modified;
-
 }
 
 /*
@@ -93,7 +88,6 @@ Tensor::Tensor(Tensor&& other) noexcept {
 
   // Copy storage data
   storage = other.storage;
-  modified = other.modified;
 
   // Set the dimension vector of the input to be empty.
   other.dim = 0;
@@ -118,7 +112,6 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 
   // Copy storage data
   storage = other.storage;
-  modified = other.modified;
 
   // Delete our data and grab the input data pointer.
   delete[] data;
@@ -295,8 +288,6 @@ void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
 
   }
 
-  modified = true;
-
 }
 
 vector<int> Tensor::getStorage() const {
@@ -304,8 +295,8 @@ vector<int> Tensor::getStorage() const {
 }
 
 void Tensor::setStorage(const std::vector<int>& store) {
-  // Check that the storage is different and that we actually modified the data
-  if (store != storage && modified) {
+  // Check that the storage is different
+  if (store != storage) {
     // Create a new data array and assign with new storage info
     int total_size = 1;
     for (int i = 0; i < dim; ++i)
