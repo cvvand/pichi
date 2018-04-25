@@ -44,6 +44,36 @@ TEST(Contract, aabb) {
   EXPECT_EQ(-1.0, c.contract('A',{{0,1},{2,3}}));
 }
 
+TEST(Contract, aabc_bc) {
+  Tensor t1(4,2);
+  cdouble data[4];
+  data[0] = 3.0; data[1] = 3.0;
+  data[2] = 3.0; data[3] = -1.0;
+  t1.setSlice({-1,-1,0,0},data);
+  data[0] = 2.0; data[1] = 3.0;
+  data[2] = 3.0; data[3] = 0.0;
+  t1.setSlice({-1,-1,1,0},data);
+  data[0] = 3.0; data[1] = -3.0;
+  data[2] = 3.0; data[3] = 2.0;
+  t1.setSlice({-1,-1,0,1},data);
+  data[0] = 1.0; data[1] = 2.0;
+  data[2] = 3.0; data[3] = -4.0;
+  t1.setSlice({-1,-1,1,1},data);
+
+  Tensor t2(2,2);
+  data[0] = 2.0; data[1] = -2.0;
+  data[2] = 5.0; data[3] = -5.0;
+  t2.setSlice({-1,-1},data);
+
+  Contraction<char> c;
+  c.addTensor('A', t1);
+  c.addTensor('B', t2);
+
+  c.contract('A',{{0,1}},'C');
+
+  EXPECT_EQ(40.0, c.contract('C','B',{{0,0},{1,1}}));
+}
+
 TEST(Contract, ab_ba) {
   Tensor t1(2,3);
   cdouble data[9];

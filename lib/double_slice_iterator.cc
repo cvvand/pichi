@@ -5,8 +5,9 @@ using namespace std;
 namespace pichi {
 
 
-SliceIterator::SliceIterator(int rank1, int rank2, int size,
-                             const std::vector<std::pair<int, int>>& contr) :
+DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
+                                         const std::vector<
+                                             std::pair<int, int>>& contr) :
     size(size), slice1(rank1, 0), slice2(rank2, 0),
     slice_out(rank1+rank2-2*contr.size(), 0) {
 
@@ -76,20 +77,20 @@ SliceIterator::SliceIterator(int rank1, int rank2, int size,
 
 }
 
-std::vector<int> SliceIterator::getSlice1() const {
+std::vector<int> DoubleSliceIterator::getSlice1() const {
   return slice1;
 }
 
-std::vector<int> SliceIterator::getSlice2() const {
+std::vector<int> DoubleSliceIterator::getSlice2() const {
   return slice2;
 }
 
-std::vector<int> SliceIterator::getSliceOut() const {
+std::vector<int> DoubleSliceIterator::getSliceOut() const {
   return slice_out;
 }
 
 
-bool SliceIterator::nextContracted() {
+bool DoubleSliceIterator::nextContracted() {
   if (nc.empty())
     return false;
 
@@ -114,7 +115,7 @@ bool SliceIterator::nextContracted() {
   return !flag;
 }
 
-bool SliceIterator::nextNonSlicedFree() {
+bool DoubleSliceIterator::nextNonSlicedFree() {
   if (nf1.empty() && nf2.empty())
     return false;
 
@@ -157,7 +158,7 @@ bool SliceIterator::nextNonSlicedFree() {
   return !flag;
 }
 
-bool SliceIterator::nextSlicedFree() {
+bool DoubleSliceIterator::nextSlicedFree() {
   if (sf1.empty() && sf2.empty())
     return false;
 

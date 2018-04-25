@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 
 /*
- * Unit tests of the contraction logic defined in SLICE_ITERATOR.CC
+ * Unit tests of the iteration logic defined in DOUBLE_SLICE_ITERATOR.CC
  */
 
 using namespace pichi;
@@ -10,8 +10,8 @@ using namespace std;
 
 namespace {
 
-TEST(Iterator2, Simple) {
-  SliceIterator s(3, 3, 2, {{1,1},{2,0}});
+TEST(DoubleIterator2, Simple) {
+  DoubleSliceIterator s(3, 3, 2, {{1,1},{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();
@@ -45,8 +45,8 @@ TEST(Iterator2, Simple) {
 
 }
 
-TEST(Iterator2, NextContracted) {
-  SliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
+TEST(DoubleIterator2, NextContracted) {
+  DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();
@@ -91,8 +91,8 @@ TEST(Iterator2, NextContracted) {
 
 }
 
-TEST(Iterator2, NextSlicedFree) {
-  SliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
+TEST(DoubleIterator2, NextSlicedFree) {
+  DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();
@@ -130,8 +130,8 @@ TEST(Iterator2, NextSlicedFree) {
 
 }
 
-TEST(Iterator2, NextNonSlicedFree) {
-  SliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
+TEST(DoubleIterator2, NextNonSlicedFree) {
+  DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();
@@ -230,8 +230,8 @@ TEST(Iterator2, NextNonSlicedFree) {
 
 }
 
-TEST(Iterator1, Simple) {
-  SliceIterator s(3, 2, 2, {{2,0}});
+TEST(DoubleIterator1, Simple) {
+  DoubleSliceIterator s(3, 2, 2, {{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();
@@ -249,8 +249,8 @@ TEST(Iterator1, Simple) {
 
 }
 
-TEST(IteratorOnlyContracted, Simple) {
-  SliceIterator s(3, 3, 2, {{0,2},{1,1},{2,0}});
+TEST(DoubleIteratorOnlyContracted, Simple) {
+  DoubleSliceIterator s(3, 3, 2, {{0,2},{1,1},{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
   vector<int> so = s.getSliceOut();

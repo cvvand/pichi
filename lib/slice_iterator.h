@@ -10,10 +10,10 @@ namespace pichi {
  * This file declares a way to iterate through slices of a tensor when doing
  * contractions.
  *
- * We need to keep track of three tensor slices when contracting tensors. The
- * two input tensor slices and the output tensor slice. When doing the
- * contractions there are four different types of indices on input tensors, that
- * we have to keep track of:
+ * Depending on the type of contractions, there are 1, 2 or 3 slices we need
+ * to keep track of. There can be 1 or 2 input tensors and there may or may
+ * not be an output tensor. On the input slices there are 4 types of indices:
+ *
  *   - Sliced and contracted indices on input tensors (SC)
  *   - Non-sliced and contracted indices on input tensors (NC)
  *   - Free indices, sliced on the output tensor (SF)
@@ -26,16 +26,16 @@ namespace pichi {
  * Here we contract the three indices d,e and f. We could slice the input
  * tensors along indices d and e, while the output tensor is sliced along
  * indices a and g. In that case, the index types on tensor A is
- *    (SF,NF,NF;SC,SC,NC).
+ *    (SF,NF,NF,SC,SC,NC).
  * On tensor B the structure is
  *    (NC,SC,SC,SF)
- * On the output tensor, we only care whether an index is sliced (S) or not
- * (F). Therefore, the index structur on C is
+ * On the output tensor, if there is one, we only care whether an index is
+ * sliced (S) or not (F). Therefore, the index structur on C is
  *    (S,F,F,S)
- *
- * The SliceIterator class facilitates iterating through these types of
- * indices, for example by increasing a free, non sliced index on one of the
- * input tensors and the output tensors simultaneously.
+ * where the two S-indices correspond to the SF indices on the input tensors
+ * and the F indices correspond to the NF indices.
+ * The structure is similar for contractions involving only one input tensor
+ * and for contractions without any output tensor.
  *
  * The sliced indices are recognised by being negative numbers. In the
  * example above, the actual initial slices would look like this
@@ -65,7 +65,7 @@ namespace pichi {
  *
  * ***********************************************************************/
 
-class SliceIterator {
+class DoubleSliceIterator {
 
 public:
 
@@ -86,8 +86,8 @@ public:
    * second tensor.
    *
    */
-  SliceIterator(int rank1, int rank2, int size,
-                const std::vector<std::pair<int,int>>& contractions);
+  DoubleSliceIterator(int rank1, int rank2, int size,
+                      const std::vector<std::pair<int,int>>& contractions);
 
   /*
    * Gets the current slices
@@ -136,6 +136,73 @@ private:
   // Current state of the slices
   std::vector<int> slice1;
   std::vector<int> slice2;
+  std::vector<int> slice_out;
+
+};
+
+
+
+class SingleSliceIterator {
+
+public:
+
+  /*
+   * Initiates an iterator for one tensors of a given rank and size as well
+   * as a list of contracted indices.
+   * The contractions is a list of pairs of integers. Each pair corresponds
+   * to a contraction of indices. For example, the contraction
+   *
+   *    A_aabbcd
+   *
+   * Would look like
+   *    {{0,1},{2,3}}
+   */
+  SingleSliceIterator(int rank1, int size,
+                      const std::vector<std::pair<int,int>>& contractions);
+
+  /*
+   * Gets the current slices
+   */
+  std::vector<int> getSlice1() const;
+  std::vector<int> getSliceOut() const;
+
+  /*
+   * Advances the non-sliced contracted indices (NC) on the input tensor.
+   * Returns false if this returns the NC indices to their initial state.
+   * Otherwise returns true.
+   */
+  bool nextContracted();
+
+  /*
+   * Advances the free indices which are sliced on the output tensor (SF).
+   * Returns false if this returns the SF indices to their initial state.
+   * Otherwise returns true.
+   */
+  bool nextSlicedFree();
+
+  /*
+   * Advances the free indices which are not sliced on the output tensor (NF).
+   * Returns false if this returns the NF indices to their initial state.
+   * Otherwise returns true.
+   */
+  bool nextNonSlicedFree();
+
+private:
+
+  // Size of the tensors
+  int size;
+
+  // List of SF indices on the input tensor
+  std::vector<int> sf;
+
+  // List of NF indices on {input, output} tensors
+  std::vector<std::pair<int,int>> nf;
+
+  // List of NC indices on the input tensor
+  std::vector<std::pair<int,int>> nc;
+
+  // Current state of the slices
+  std::vector<int> slice1;
   std::vector<int> slice_out;
 
 };

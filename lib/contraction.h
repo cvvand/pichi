@@ -24,9 +24,10 @@ namespace pichi {
  *
  * 1) Contracting all indices on one or two tensors in the collection,
  * resulting in an output number.
- * 2) Contracting some indices on two tensors in the collection, creating a
- * new tensor from the result. The result is added to the collection, so it
- * can be used for more contractions later. This gives no output.
+ * 2) Contracting some indices on one or two tensors in the collection,
+ * creating a new tensor from the result. The result is added to the
+ * collection, so it can be used for more contractions later. This gives no
+ * output.
  *
  * The input tensors in the collection can be reused after a contraction in
  * all three cases. They are not modified (other than a possible internal
@@ -84,6 +85,13 @@ public:
    */
   cdouble contract(Key tensor1, Key tensor2,
                 const std::vector<std::pair<int, int>>& idx) const;
+
+  /*
+   * Contract a number of indices on a tensor in the collection. The
+   * resulting tensor is added to the collection with a given name.
+   */
+  void contract(Key tensor1,
+                const std::vector<std::pair<int,int>>& idx, Key tensor_out);
 
   /*
    * Contract a number of indices on two tensors in the collection. The

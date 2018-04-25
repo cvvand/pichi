@@ -48,7 +48,8 @@ endif()
 add_executable(all_ut
         test_contract.cc
         test_contraction_collection.cc
-        test_slice_iterator.cc
+        test_double_slice_iterator.cc
+        test_single_slice_iterator.cc
         test_tensor.cc
         test_tensor_getsetslice.cc
         test_tensor_storage.cc
