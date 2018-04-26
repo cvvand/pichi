@@ -12,6 +12,22 @@ using namespace std;
 
 namespace {
 
+TEST(ContractionCollection, NoDoubleInsert) {
+  Tensor t1(2,2);
+  Tensor t2(3,2);
+  Contraction<char> c;
+  c.addTensor('A',t1);
+  c.addTensor('A',t2);
+  EXPECT_EQ(2, c.getTensor('A').rank());
+}
+
+TEST(ContractionCollection, ErrorOnNonExistingTensor) {
+  Tensor t1(2,2);
+  Contraction<char> c;
+  c.addTensor('A',t1);
+  EXPECT_THROW(c.getTensor('B'), out_of_range);
+}
+
 TEST(ContractionCollection, AlterTensorAfterInsertion) {
   Tensor t1(2,2);
   cdouble data[4];
@@ -40,7 +56,7 @@ TEST(ContractionCollection, RemoveTensorAfterInsertion) {
   EXPECT_EQ(2.0, c.contract('A',{{0,1}}));
 
   c.removeTensor('A');
-  EXPECT_THROW(c.contract('A',{{0,1}}), out_of_range);
+  EXPECT_THROW(c.contract('A',{{0,1}}), invalid_argument);
 }
 
 

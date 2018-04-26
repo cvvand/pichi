@@ -14,7 +14,7 @@
 
 #define N 10
 #define P 10
-#define SIZE 64
+#define SIZE 128
 
 using namespace pichi;
 using namespace std;
@@ -62,9 +62,8 @@ double stdev(vector<double> x) {
 }
 
 void header() {
-  cout << "Launching PICHI benchmark test 1" << endl << endl;
-  cout << "   Contraction pattern: A_abc B_cd C_dbe D_ae" << endl;
-  cout << "   Contraction list: c , b+d , a+e" << endl;
+  cout << "Launching PICHI benchmark test 2" << endl << endl;
+  cout << "   Contraction pattern: A_abc B_abc" << endl;
   cout << "   Running the test " << N << " times with tensors of size " <<
        SIZE << endl;
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
@@ -98,26 +97,18 @@ int main() {
 
     // Contract random tensors of pattern A_abc B_cd C_dbe D_ae
     Tensor a(3, SIZE);
-    Tensor b(2, SIZE);
     Tensor c(3, SIZE);
-    Tensor d(2, SIZE);
 
     fill3(a);
-    fill2(b);
     fill3(c);
-    fill2(d);
 
     Contraction<char> con;
     con.addTensor('A', a);
-    con.addTensor('B', b);
     con.addTensor('C', c);
-    con.addTensor('D', d);
 
     auto start = chrono::steady_clock::now();
 
-    con.contract('A', 'B', {{2, 0}}, 'E'); // E_abd
-    con.contract('E', 'C', {{1, 1}, {2, 0}}, 'F'); // F_ae
-    con.contract('F', 'D', {{0, 0}, {1, 1}});
+    con.contract('A', 'C', {{0, 0},{1,1},{2,2}});
     auto end = chrono::steady_clock::now();
 
     double et_tot = chrono::duration_cast<

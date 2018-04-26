@@ -9,6 +9,7 @@
 #include "contraction.h"
 #include "slice_iterator.h"
 #include <armadillo>
+#include <unordered_set>
 
 using namespace std;
 using namespace arma;
@@ -128,16 +129,39 @@ cdouble Contraction<Key>::contract(Key tensor,
                                    const std::vector<
                                        std::pair<int,int>>& idx) {
 
+  // Check that we have the tensor.
+  Tensor* t;
+  try {
+    t = &tensors.at(tensor);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor) +
+                           " not found in collection");
+  }
 
-  Tensor* t = &tensors.at(tensor);
-  cdouble data[t->size()*t->size()];
-  cdouble res = 0.0;
+  // Check that we have the correct number of contracted indices
+  if (idx.size()*2 != t->rank())
+    throw invalid_argument("Incompatible number of contracted indices");
+  // Check that no index appears twice and that they are valid indices
+  unordered_set<int> seen;
+  for (pair<int,int> p : idx) {
+    if (p.first < 0 || p.first >= t->rank() ||
+        p.second < 0 || p.second >= t->rank())
+      throw invalid_argument("Indices must be between 0 and R-1, where R is "
+                             "the tensor rank");
+    if (!(seen.insert(p.first).second && seen.insert(p.second).second))
+      throw invalid_argument("List of contracted indices "
+                             "contains an index twice");
+  }
 
   // Set up slice iterator
   SingleSliceIterator it(t->rank(), t->size(), idx);
 
   // Set storage
   setStorage(*t, it.getSlice1());
+
+  cdouble data[t->size()*t->size()];
+  cdouble res = 0.0;
+
 
   do {
 
@@ -163,8 +187,41 @@ cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
    */
 
   // Get the tensors in question
-  Tensor* t1 = &tensors.at(tensor1);
-  Tensor* t2 = &tensors.at(tensor2);
+  Tensor* t1;
+  Tensor* t2;
+  try {
+    t1 = &tensors.at(tensor1);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor1) +
+                           " not found in collection");
+  }
+  try {
+    t2 = &tensors.at(tensor2);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor2) +
+                           " not found in collection");
+  }
+
+  if (t1->rank() != t2->rank())
+    throw invalid_argument("Tensors " + to_string(tensor1) + " and " +
+                           to_string(tensor2) + " does not have equal rank");
+
+  // Check that we have the correct number of contracted indices
+  if (idx.size() != t1->rank())
+    throw invalid_argument("Incompatible number of contracted indices");
+
+  // Check that we all indices are contracted and that they are valid indices
+  unordered_set<int> seen1;
+  unordered_set<int> seen2;
+  for (pair<int,int> p : idx) {
+    if (p.first < 0 || p.first >= t1->rank() ||
+        p.second < 0 || p.second >= t2->rank())
+      throw invalid_argument("Indices must be between 0 and R-1, where R is "
+                             "the tensor rank");
+    if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
+      throw invalid_argument("List of contracted indices "
+                             "contains an index twice");
+  }
 
   // Set up the iterator
   DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
@@ -222,12 +279,39 @@ void Contraction<Key>::contract(Key tensor1,
    *   B_012 = tr(A_**00012) + tr(A_**11012) + ...
    */
 
+  // Check that we have the tensor.
+  Tensor* t1;
+  try {
+    t1 = &tensors.at(tensor1);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor1) +
+                           " not found in collection");
+  }
 
-  // Get the tensors in question
-  Tensor* t1 = &tensors.at(tensor1);
+  // Check that the output key does not exist
+  if (tensors.find(tensor_out) != tensors.end())
+    throw invalid_argument("Output tensor key already exists");
+
+  // Check that there are contracted indices
+  if (idx.empty())
+    throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
   int free_out = t1->rank() - 2*idx.size();
+  if (free_out <= 1)
+    throw invalid_argument("Too many contracted indices");
+
+  // Check that we have no repeated indices
+  unordered_set<int> seen;
+  for (pair<int,int> p : idx) {
+    if (p.first < 0 || p.first >= t1->rank() ||
+        p.second < 0 || p.second >= t1->rank())
+      throw invalid_argument("Indices must be between 0 and R-1, where R is "
+                             "the tensor rank");
+    if (!(seen.insert(p.first).second && seen.insert(p.second).second))
+      throw invalid_argument("List of contracted indices "
+                             "contains an index twice");
+  }
 
   // Set up the iterator
   SingleSliceIterator it(t1->rank(), t1->size(), idx);
@@ -313,11 +397,46 @@ void Contraction<Key>::contract(Key tensor1, Key tensor2,
    */
 
   // Get the tensors in question
-  Tensor* t1 = &tensors.at(tensor1);
-  Tensor* t2 = &tensors.at(tensor2);
+  Tensor* t1;
+  Tensor* t2;
+  try {
+    t1 = &tensors.at(tensor1);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor1) +
+                           " not found in collection");
+  }
+  try {
+    t2 = &tensors.at(tensor2);
+  } catch (out_of_range& e) {
+    throw invalid_argument("Tensor " + to_string(tensor2) +
+                           " not found in collection");
+  }
+
+  // Check that the output key does not exist
+  if (tensors.find(tensor_out) != tensors.end())
+    throw invalid_argument("Output tensor key already exists");
+
+  // Check that there are contracted indices
+  if (idx.empty())
+    throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
   int free_out = t1->rank() + t2->rank() - 2*idx.size();
+  if (free_out <= 1)
+    throw invalid_argument("Too many contracted indices");
+
+  // Check that we have no repeated indices
+  unordered_set<int> seen1;
+  unordered_set<int> seen2;
+  for (pair<int,int> p : idx) {
+    if (p.first < 0 || p.first >= t1->rank() ||
+        p.second < 0 || p.second >= t2->rank())
+      throw invalid_argument("Indices must be between 0 and R-1, where R is "
+                             "the tensor rank");
+    if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
+      throw invalid_argument("List of contracted indices "
+                             "contains an index twice");
+  }
 
   // Set up the iterator
   DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
