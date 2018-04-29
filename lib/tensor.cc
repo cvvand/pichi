@@ -6,41 +6,54 @@
  * ***************************************************************************/
 
 #include <iostream>
+#include <unordered_set>
 #include "tensor.h"
 
 using namespace std;
 
 namespace pichi {
 
+void Tensor::init(int rank, int size) {
+
+  if (rank < 2) {
+    throw invalid_argument("Tensor rank must be at least 2");
+  }
+  if (size < 2) {
+    throw invalid_argument("Tensor size must be at least 2");
+  }
+
+  dim = rank;
+  n = size;
+
+  // Get the total number of components of the tensor ( size^rank )
+  int total_size = 1;
+  for (int i = 0; i < rank; ++i)
+    total_size *= size;
+
+  // Allocate the data for the tensor and initialise everything to 0.
+  data = new cdouble[total_size];
+  for (int i = 0; i < total_size; ++i)
+    data[i] = 0.0;
+}
+
 /*
  * Default constructor implementation
  * Creates a 2x2 tensor and initialises everything to 0.
  */
-Tensor::Tensor() :
-    dim(2), n(2), data(new cdouble[4]) {
+Tensor::Tensor() : data(new cdouble[4]) {
+
+  init(2,2);
 
   storage = {0,1};
-
-  data[0] = 0.0; data[1] = 0.0;
-  data[2] = 0.0; data[3] = 0.0;
 
 }
 
 /*
  * Create a tensor with a given rank and size and initialise everything to 0
  */
-Tensor::Tensor(int rank, int size) :
-    dim(rank), n(size) {
+Tensor::Tensor(int rank, int size) {
 
-  // Get the total number of components of the tensor ( size^rank )
-  int total_size = 1;
-  for (int i = 0; i < dim; ++i)
-    total_size *= n;
-
-  // Allocate the data for the tensor and initialise everything to 0.
-  data = new cdouble[total_size];
-  for (int i = 0; i < total_size; ++i)
-    data[i] = 0.0;
+  init(rank,size);
 
   // Set default storage
   storage = vector<int>(rank);
@@ -49,8 +62,20 @@ Tensor::Tensor(int rank, int size) :
 
 }
 
-Tensor::Tensor(int rank, int size, const std::vector<int>& store) :
-    Tensor(rank, size) {
+Tensor::Tensor(int rank, int size, const std::vector<int>& store) {
+
+  init(rank,size);
+
+  // Check storage
+  if (store.size() != dim)
+    throw invalid_argument("Storage vector size must be equal to tensor rank");
+  unordered_set<int> seen;
+  for (int i : store) {
+    if (i < 0 || i >= dim)
+      throw invalid_argument("Storage vector contains an invalid index");
+    if (!seen.insert(i).second)
+      throw invalid_argument("Store vector contains a repeated index");
+  }
   storage = store;
 }
 
@@ -166,6 +191,20 @@ void Tensor::setElement(const std::vector<int>& index, cdouble value) {
 
 void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
+  // Check slice
+  if (slice.size() != dim)
+    throw invalid_argument("Slice size must be equal to tensor rank");
+  int count = 0;
+  for (int i : slice) {
+    if (i >= n)
+      throw invalid_argument("Invalid index in slice");
+    if (i < 0 && ++count == 3)
+      throw invalid_argument("Too many running indices");
+  }
+  if (count < 2) {
+    throw invalid_argument("Too few running indices");
+  }
+
   // Check if the data is correctly aligned:
   // The data is aligned correctly if the free indices of the slice
   // corresponds to the first two entries in the storage tensor in ascending
@@ -228,6 +267,20 @@ void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 }
 
 void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
+
+  // Check slice
+  if (slice.size() != dim)
+    throw invalid_argument("Slice size must be equal to tensor rank");
+  int count = 0;
+  for (int i : slice) {
+    if (i >= n)
+      throw invalid_argument("Invalid index in slice");
+    if (i < 0 && ++count == 3)
+      throw invalid_argument("Too many running indices");
+  }
+  if (count < 2) {
+    throw invalid_argument("Too few running indices");
+  }
 
   // Check if the data is correctly aligned:
   // The data is aligned correctly if the free indices of the slice
@@ -295,6 +348,17 @@ vector<int> Tensor::getStorage() const {
 }
 
 void Tensor::setStorage(const std::vector<int>& store) {
+  // Check input
+  if (store.size() != dim)
+    throw invalid_argument("Store vector size must be equal to tensor rank");
+  unordered_set<int> seen;
+  for (int i : store) {
+    if (i < 0 || i >= dim)
+      throw invalid_argument("Storage vector contains an invalid index");
+    if (!seen.insert(i).second)
+      throw invalid_argument("Store vector contains a repeated index");
+  }
+
   // Check that the storage is different
   if (store != storage) {
     // Create a new data array and assign with new storage info

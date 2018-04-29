@@ -275,4 +275,22 @@ TEST(DoubleIteratorOnlyContracted, Simple) {
 
 }
 
+TEST(DoubleIteratorErrorHandling, ValidRankAndSize) {
+  EXPECT_THROW(DoubleSliceIterator(1,2,64,{{0,1}}), invalid_argument);
+  EXPECT_THROW(DoubleSliceIterator(2,3,1,{{0,1}}), invalid_argument);
+}
+
+TEST(DoubleIteratorErrorHandling, ErrorIfContractionsIsEmpty) {
+  EXPECT_THROW(DoubleSliceIterator(4,2,64,{}), invalid_argument);
+}
+
+TEST(DoubleIteratorErrorHandling, ErrorIfContractionIndexIsInvalid) {
+  EXPECT_THROW(DoubleSliceIterator(4,2,64,{{4,1}}), invalid_argument);
+  EXPECT_THROW(DoubleSliceIterator(4,2,64,{{3,-1}}), invalid_argument);
+}
+
+TEST(DoubleIteratorErrorHandling, ErrorIfContractionIndexIsRepeated) {
+  EXPECT_THROW(DoubleSliceIterator(2,6,64,{{0,4},{0,1}}), invalid_argument);
+}
+
 }

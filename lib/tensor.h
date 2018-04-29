@@ -188,6 +188,9 @@ public:
 
 private: // --------------------------------------------------------------
 
+  /* Initialise the tensor with a given rank and size */
+  void init(int rank, int size);
+
   /* Set or get a single element in the tensor by index */
   cdouble getElement(const std::vector<int>& index) const;
   void setElement(const std::vector<int>& index, cdouble value);

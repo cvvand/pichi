@@ -48,6 +48,7 @@ endif()
 add_executable(all_ut
         test_contract.cc
         test_contraction_collection.cc
+        test_contract_errors.cc
         test_contraction_storage_rules.cc
         test_double_slice_iterator.cc
         test_single_slice_iterator.cc

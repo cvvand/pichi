@@ -1,3 +1,5 @@
+#include <stdexcept>
+#include <unordered_set>
 #include "slice_iterator.h"
 
 using namespace std;
@@ -8,10 +10,34 @@ namespace pichi {
 DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
                                          const std::vector<
                                              std::pair<int, int>>& contr) :
-    size(size), slice1(rank1, 0), slice2(rank2, 0),
-    slice_out(rank1+rank2-2*contr.size(), 0) {
+    size(size) {
+
+  // Check rank and size
+  if (rank1 < 2 || rank2 < 2) {
+    throw invalid_argument("Tensor must have at least rank 2");
+  }
+  if (size < 2) {
+    throw invalid_argument("Tensor must have at least size 2");
+  }
+
+  // Check contractions input
+  if (contr.empty()) {
+    throw invalid_argument("Contraction list is empty");
+  }
+  unordered_set<int> seen1;
+  unordered_set<int> seen2;
+  for (pair<int,int> p : contr) {
+    if (p.first < 0 || p.first >= rank1 || p.second < 0 || p.second >= rank2)
+      throw invalid_argument("Invalid index in contraction list");
+    if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
+      throw invalid_argument("Repeated index in contraction list");
+  }
 
   // Set up data structures
+
+  slice1 = vector<int>(rank1, 0);
+  slice2 = vector<int>(rank2, 0);
+  slice_out = vector<int>(rank1+rank2-2*contr.size(), 0);
 
   // We slice input tensors along the first contracted index (SC)
   slice1[contr[0].first] = -1;

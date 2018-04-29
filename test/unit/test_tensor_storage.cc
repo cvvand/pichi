@@ -79,6 +79,27 @@ TEST(TensorStorage, ChangeStorageTo2_1_0SetSliceChangeTo1_2_0GetSlice) {
   EXPECT_EQ(3.0, data[3]);
 }
 
+TEST(TensorStorage, ErrorOnStorageVectorWrongSize) {
+  EXPECT_THROW(Tensor(3,64,{1,0}), invalid_argument);
+
+  Tensor t(3,64);
+  EXPECT_THROW(t.setStorage({1,0}), invalid_argument);
+}
+
+TEST(TensorStorage, ErrorOnRepeatedIndex) {
+  EXPECT_THROW(Tensor(3,64,{1,1,0}), invalid_argument);
+
+  Tensor t(3,64);
+  EXPECT_THROW(t.setStorage({1,1,0}), invalid_argument);
+}
+
+TEST(TensorStorage, ErrorOnInvalidIndex) {
+  EXPECT_THROW(Tensor(3,64,{1,-1,0}), invalid_argument);
+
+  Tensor t(3,64);
+  EXPECT_THROW(t.setStorage({1,3,0}), invalid_argument);
+}
+
 
 
 }

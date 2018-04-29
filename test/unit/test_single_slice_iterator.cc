@@ -134,6 +134,24 @@ TEST(SingleIterator, NextNonSlicedFree) {
 
 }
 
+TEST(SingleIteratorErrorHandling, ValidRankAndSize) {
+  EXPECT_THROW(SingleSliceIterator(1,64,{{0,1}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(2,1,{{0,1}}), invalid_argument);
+}
+
+TEST(SingleIteratorErrorHandling, ErrorIfContractionsIsEmpty) {
+  EXPECT_THROW(SingleSliceIterator(4,64,{}), invalid_argument);
+}
+
+TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsInvalid) {
+  EXPECT_THROW(SingleSliceIterator(4,64,{{0,4}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(4,64,{{-1,3}}), invalid_argument);
+}
+
+TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsRepeated) {
+  EXPECT_THROW(SingleSliceIterator(6,64,{{0,4},{0,1}}), invalid_argument);
+}
+
 }
 
 

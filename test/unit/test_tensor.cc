@@ -41,6 +41,14 @@ TEST(TensorConstructor, InitialDataOfTensor) {
     EXPECT_EQ(data[i],0.0);
 }
 
+TEST(TensorConstructor, ErrorOnRank1) {
+  EXPECT_THROW(Tensor(1,64), invalid_argument);
+}
+
+TEST(TensorConstructor, ErrorOnSize1) {
+  EXPECT_THROW(Tensor(2,1), invalid_argument);
+}
+
 
 
 

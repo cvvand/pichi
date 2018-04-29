@@ -53,4 +53,42 @@ TEST(TensorGetSetSlice, OverlappingSlicesAreCompatible) {
 
 }
 
+TEST(TensorGetSetSlice, GetSliceErrorOnInvalidIndex) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.getSlice({-1,-1,-1}, data), invalid_argument);
+  EXPECT_THROW(t.getSlice({-1,-1,64}, data), invalid_argument);
+}
+
+TEST(TensorGetSetSlice, GetSliceErrorOnWrongNumberOfEntries) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.getSlice({-1,-1,0,1}, data), invalid_argument);
+}
+
+TEST(TensorGetSetSlice, GetSliceErrorOnTooFewRunningIndices) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.getSlice({-1,0,1}, data), invalid_argument);
+}
+
+TEST(TensorGetSetSlice, SetSliceErrorOnInvalidIndex) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.setSlice({-1,-1,-1}, data), invalid_argument);
+  EXPECT_THROW(t.setSlice({-1,-1,64}, data), invalid_argument);
+}
+
+TEST(TensorGetSetSlice, SetSliceErrorOnTooFewRunningIndices) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.setSlice({-1,0,1}, data), invalid_argument);
+}
+
+TEST(TensorGetSetSlice, SetSliceErrorOnWrongNumberOfEntries) {
+  Tensor t(3,64);
+  cdouble data[64*64];
+  EXPECT_THROW(t.setSlice({-1,-1,0,1}, data), invalid_argument);
+}
+
 }
