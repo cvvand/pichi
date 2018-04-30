@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <unordered_set>
+#include <iostream>
 #include "slice_iterator.h"
 
 using namespace std;
@@ -54,6 +55,10 @@ DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
   for (int i = 2; i < contr.size(); ++i)
     nc.push_back(contr[i]);
 
+  // Find the number of free indices on each input tensor
+  int nfree_1 = rank1 - contr.size();
+  int nfree_2 = rank2 - contr.size();
+
   // Search for free indices on tensor 1
   int out_index = 0; // Keep track of the index number on the output tensor
   bool first_free = true;
@@ -74,6 +79,12 @@ DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
         slice1[i] = -2;
       slice_out[out_index++] = -1;
       first_free = false;
+    } else if (free && nfree_2 == 0 && sf1.size() == 1) {
+      // The index is free, and there are no free indices on tensor 2. sf1
+      // has size 1, which means we only have 1 free index so far.
+      // Therefore, we also make this an SF index
+      sf1.push_back(i);
+      slice_out[out_index++] = -1;
     } else if (free) {
       // If the index is free, but not the first free index, it belongs in
       // the NF category.
@@ -96,6 +107,9 @@ DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
         slice2[i] = -2;
       slice_out[out_index++] = -1;
       first_free = false;
+    } else if (free && nfree_1 == 0 && sf2.size() == 1) {
+      sf2.push_back(i);
+      slice_out[out_index++] = -1;
     } else if (free) {
       nf2.emplace_back(i,out_index++);
     }
@@ -185,30 +199,25 @@ bool DoubleSliceIterator::nextNonSlicedFree() {
 }
 
 bool DoubleSliceIterator::nextSlicedFree() {
-  if (sf1.empty() && sf2.empty())
-    return false;
 
-  // At this point, there are either 0 SF indices (when there is only one
-  // contracted index), or there is 1 on both tensors (when there is two or
-  // more contracted indices). Therefore, we assume the lengths of sf1 and sf2
-  // are equal and either 0 or 1.
+  bool flag = true;
 
-  // If we got to this point, the length is 1
-
-  // Increase the SF index on slice 1
-  int z = ++slice1[sf1[0]];
-  if (z == size) {
-    // The SF index on slice 1 needs to roll...
-    slice1[sf1[0]] = 0;
-    // .. so we increase then SF index on tensor 2 instead
-    z = ++slice2[sf2[0]];
-    if (z == size) {
-      // This index also needs to roll
-      slice2[sf2[0]] = 0;
-      return false;
-    }
+  for (int i = 0; i < sf1.size() && flag; ++i) {
+    int z = ++slice1[sf1[i]];
+    if (size == z) {
+      slice1[sf1[i]] = 0;
+    } else
+      flag = false;
   }
-  return true;
+  for (int i = 0; i < sf2.size() && flag; ++i) {
+    int z = ++slice2[sf2[i]];
+    if (size == z) {
+      slice2[sf2[i]] = 0;
+    } else
+      flag = false;
+  }
+
+  return !flag;
 }
 
 

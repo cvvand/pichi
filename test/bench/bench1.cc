@@ -96,7 +96,7 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    // Contract random tensors of pattern A_abc B_cd C_dbe D_ae
+    // Contract random tensors of pattern A_abc B_cd C_abe D_de
     Tensor a(3, SIZE);
     Tensor b(2, SIZE);
     Tensor c(3, SIZE);
@@ -115,9 +115,9 @@ int main() {
 
     auto start = chrono::steady_clock::now();
 
-    con.contract('A', 'B', {{2, 0}}, 'E'); // E_abd
-    con.contract('E', 'C', {{1, 1}, {2, 0}}, 'F'); // F_ae
-    con.contract('F', 'D', {{0, 0}, {1, 1}});
+    con.contract('A', 'B', {{2, 1}}, 'E');
+    con.contract('E', 'D', {{2, 0}}, 'F');
+    con.contract('F', 'C', {{0, 0}, {1, 1}, {2,2}});
     auto end = chrono::steady_clock::now();
 
     double et_tot = chrono::duration_cast<

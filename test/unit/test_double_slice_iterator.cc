@@ -10,7 +10,7 @@ using namespace std;
 
 namespace {
 
-TEST(DoubleIterator2, Simple) {
+TEST(DoubleIterator, Simple) {
   DoubleSliceIterator s(3, 3, 2, {{1,1},{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -45,7 +45,7 @@ TEST(DoubleIterator2, Simple) {
 
 }
 
-TEST(DoubleIterator2, NextContracted) {
+TEST(DoubleIterator, NextContracted) {
   DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -91,7 +91,7 @@ TEST(DoubleIterator2, NextContracted) {
 
 }
 
-TEST(DoubleIterator2, NextSlicedFree) {
+TEST(DoubleIterator, NextSlicedFree) {
   DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -130,7 +130,7 @@ TEST(DoubleIterator2, NextSlicedFree) {
 
 }
 
-TEST(DoubleIterator2, NextNonSlicedFree) {
+TEST(DoubleIterator, NextNonSlicedFree) {
   DoubleSliceIterator s(7, 7, 2, {{3,3},{4,2},{5,1},{6,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -230,7 +230,7 @@ TEST(DoubleIterator2, NextNonSlicedFree) {
 
 }
 
-TEST(DoubleIterator1, Simple) {
+TEST(DoubleIterator, SingleContractedIndex) {
   DoubleSliceIterator s(3, 2, 2, {{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -249,7 +249,7 @@ TEST(DoubleIterator1, Simple) {
 
 }
 
-TEST(DoubleIteratorOnlyContracted, Simple) {
+TEST(DoubleIterator, OnlyContractedIndices) {
   DoubleSliceIterator s(3, 3, 2, {{0,2},{1,1},{2,0}});
   vector<int> s1 = s.getSlice1();
   vector<int> s2 = s.getSlice2();
@@ -272,6 +272,48 @@ TEST(DoubleIteratorOnlyContracted, Simple) {
   EXPECT_FALSE(s.nextContracted());
   EXPECT_EQ(0, s.getSlice1()[2]);
   EXPECT_EQ(0, s.getSlice2()[0]);
+
+}
+
+TEST(DoubleIterator, OneFreeOneFullyContracted) {
+  DoubleSliceIterator s(4, 2, 2, {{0,0},{1,1}});
+  vector<int> s1 = s.getSlice1();
+  vector<int> s2 = s.getSlice2();
+  vector<int> so = s.getSliceOut();
+
+  ASSERT_EQ(4, s1.size());
+  ASSERT_EQ(2, s2.size());
+  ASSERT_EQ(2, so.size());
+
+  EXPECT_EQ(-1, s1[0]); EXPECT_EQ(-2, s1[1]);
+  EXPECT_EQ(0, s1[2]); EXPECT_EQ(0, s1[3]);
+
+  EXPECT_EQ(-1, s2[0]); EXPECT_EQ(-2, s2[1]);
+
+  EXPECT_EQ(-1, so[0]); EXPECT_EQ(-1, so[1]);
+
+  EXPECT_FALSE(s.nextContracted());
+
+  EXPECT_FALSE(s.nextNonSlicedFree());
+
+  EXPECT_TRUE(s.nextSlicedFree());
+  EXPECT_EQ(1, s.getSlice1()[2]);
+
+  EXPECT_TRUE(s.nextSlicedFree());
+  EXPECT_EQ(0, s.getSlice1()[2]);
+  EXPECT_EQ(1, s.getSlice1()[3]);
+
+  EXPECT_TRUE(s.nextSlicedFree());
+  EXPECT_EQ(1, s.getSlice1()[2]);
+  EXPECT_EQ(1, s.getSlice1()[3]);
+
+  EXPECT_FALSE(s.nextSlicedFree());
+  EXPECT_EQ(0, s.getSlice1()[2]);
+  EXPECT_EQ(0, s.getSlice1()[3]);
+
+
+
+
 
 }
 
