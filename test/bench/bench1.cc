@@ -12,8 +12,8 @@
 #include <iomanip>
 #include <chrono>
 
-#define N 10
-#define P 10
+#define N 3
+#define P 0
 #define SIZE 64
 
 using namespace pichi;
@@ -63,20 +63,18 @@ double stdev(vector<double> x) {
 
 void header() {
   cout << "Launching PICHI benchmark test 1" << endl << endl;
-  cout << "   Contraction pattern: A_abc B_cd C_dbe D_ae" << endl;
-  cout << "   Contraction list: c , b+d , a+e" << endl;
   cout << "   Running the test " << N << " times with tensors of size " <<
        SIZE << endl;
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
 
   cout << "---------------------------------- " << endl << endl;
-  cout << "#\tTime/sec" << endl;
-  cout << "------------" << endl;
+  cout << "#\tTime/sec\tResult" << endl;
+  cout << "-------------------" << endl;
 
 }
 
-void writeRun(int n, double etot) {
-  cout << setprecision(3) << n << "\t" << etot << endl;
+void writeRun(int n, double etot, cdouble res) {
+  cout << setprecision(3) << n << "\t" << etot << "\t" << res << endl;
 }
 
 void report(vector<double> times) {
@@ -96,16 +94,15 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    // Contract random tensors of pattern A_abc B_cd C_abe D_de
     Tensor a(3, SIZE);
-    Tensor b(2, SIZE);
+    Tensor b(3, SIZE);
     Tensor c(3, SIZE);
-    Tensor d(2, SIZE);
+    Tensor d(3, SIZE);
 
     fill3(a);
-    fill2(b);
+    fill3(b);
     fill3(c);
-    fill2(d);
+    fill3(d);
 
     Contraction<char> con;
     con.addTensor('A', a);
@@ -115,16 +112,18 @@ int main() {
 
     auto start = chrono::steady_clock::now();
 
-    con.contract('A', 'B', {{2, 1}}, 'E');
-    con.contract('E', 'D', {{2, 0}}, 'F');
-    con.contract('F', 'C', {{0, 0}, {1, 1}, {2,2}});
+    con.contract('A','D', {{2, 0}},'E');
+    con.contract('E','B', {{0, 0},{1,1}},'F'); // efd
+    cdouble r = con.contract('F','C',{{0,1},{1,2},{2,0}});
+
+
     auto end = chrono::steady_clock::now();
 
     double et_tot = chrono::duration_cast<
         chrono::duration<double>>(end-start).count();
     if (i >= 0) {
       times.push_back(et_tot);
-      writeRun(i, et_tot);
+      writeRun(i, et_tot, r);
     }
 
   }

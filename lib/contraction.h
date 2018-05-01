@@ -48,7 +48,6 @@ namespace pichi {
  *
  * ***********************************************************************/
 
-template <class Key>
 class Contraction {
 
 public:
@@ -57,24 +56,24 @@ public:
    * Add a tensor to the collection with a given name. The name has to be
    * unique.
    */
-  void addTensor(Key name, Tensor& tensor);
+  void addTensor(int name, Tensor& tensor);
 
   /*
    * Get a tensor reference from the collection. This can be used to modify
    * the tensor after insertion.
    */
-  Tensor& getTensor(Key tensor);
+  Tensor& getTensor(int tensor);
 
   /*
    * Remove a tensor from the collection, if it exists.
    */
-  void removeTensor(Key tensor);
+  void removeTensor(int tensor);
 
   /*
    * Contracts all indices on a single tensor, resulting in a number. For a
    * rank 2 tensor, this is just the trace.
    */
-  cdouble contract(Key tensor,
+  cdouble contract(int tensor,
                    const std::vector<std::pair<int, int>>& idx);
 
   /*
@@ -83,27 +82,27 @@ public:
    * The input list of contracted indices must be the same length as the
    * tensor ranks. Returns the result
    */
-  cdouble contract(Key tensor1, Key tensor2,
+  cdouble contract(int tensor1, int tensor2,
                 const std::vector<std::pair<int, int>>& idx);
 
   /*
    * Contract a number of indices on a tensor in the collection. The
    * resulting tensor is added to the collection with a given name.
    */
-  void contract(Key tensor1,
-                const std::vector<std::pair<int,int>>& idx, Key tensor_out);
+  void contract(int tensor1,
+                const std::vector<std::pair<int,int>>& idx, int tensor_out);
 
   /*
    * Contract a number of indices on two tensors in the collection. The
    * resulting tensor is added to the collection with a given name.
    */
-  void contract(Key tensor1, Key tensor2,
-                const std::vector<std::pair<int,int>>& idx, Key tensor_out);
+  void contract(int tensor1, int tensor2,
+                const std::vector<std::pair<int,int>>& idx, int tensor_out);
 
 private:
 
   // The collection of tensors
-  std::unordered_map<Key, Tensor> tensors;
+  std::unordered_map<int, Tensor> tensors;
 
   void setStorage(Tensor& tensor, const std::vector<int> slicing);
 

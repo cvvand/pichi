@@ -16,24 +16,20 @@ using namespace arma;
 
 namespace pichi {
 
-template <class Key>
-void Contraction<Key>::addTensor(Key name, Tensor& tensor) {
+void Contraction::addTensor(int name, Tensor& tensor) {
   tensors.insert({name,tensor});
 }
 
-template <class Key>
-Tensor& Contraction<Key>::getTensor(Key tensor) {
+Tensor& Contraction::getTensor(int tensor) {
   return tensors.at(tensor);
 }
 
-template <class Key>
-void Contraction<Key>::removeTensor(Key tensor) {
-  tensors.erase('A');
+void Contraction::removeTensor(int tensor) {
+  tensors.erase(tensor);
 }
 
-template <class Key>
-int Contraction<Key>::detectTranspose(const std::vector<int>& slice1,
-                                      const std::vector<int>& slice2) const {
+int Contraction::detectTranspose(const std::vector<int>& slice1,
+                                 const std::vector<int>& slice2) const {
 
   /*
    * This function detects whether a slice of a tensor needs to be transposed
@@ -95,9 +91,8 @@ int Contraction<Key>::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
-template<class Key>
-void Contraction<Key>::setStorage(Tensor& tensor,
-                                  const std::vector<int> slicing) {
+void Contraction::setStorage(Tensor& tensor,
+                             const std::vector<int> slicing) {
 
   vector<int> storage = tensor.getStorage(); // The current storage
   int count = 0; // The currently found number of sliced indices
@@ -124,10 +119,9 @@ void Contraction<Key>::setStorage(Tensor& tensor,
 
 }
 
-template <class Key>
-cdouble Contraction<Key>::contract(Key tensor,
-                                   const std::vector<
-                                       std::pair<int,int>>& idx) {
+cdouble Contraction::contract(int tensor,
+                              const std::vector<
+                                 std::pair<int,int>>& idx) {
 
   // Check that we have the tensor.
   Tensor* t;
@@ -173,10 +167,9 @@ cdouble Contraction<Key>::contract(Key tensor,
   return res;
 }
 
-template <class Key>
-cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
-                                   const std::vector<
-                                       std::pair<int, int>>& idx) {
+cdouble Contraction::contract(int tensor1, int tensor2,
+                              const std::vector<
+                                  std::pair<int, int>>& idx) {
 
   /*
    * Contractions on the form
@@ -267,10 +260,9 @@ cdouble Contraction<Key>::contract(Key tensor1, Key tensor2,
 
 }
 
-template <class Key>
-void Contraction<Key>::contract(Key tensor1,
-                                const std::vector<std::pair<int, int>>& idx,
-                                Key tensor_out) {
+void Contraction::contract(int tensor1,
+                           const std::vector<std::pair<int, int>>& idx,
+                           int tensor_out) {
 
   /*
    * Contractions on the form
@@ -370,11 +362,9 @@ void Contraction<Key>::contract(Key tensor1,
 
 }
 
-template <class Key>
-void Contraction<Key>::contract(Key tensor1, Key tensor2,
-                                const std::vector<
-                                    std::pair<int, int>>& idx,
-                                Key tensor_out) {
+void Contraction::contract(int tensor1, int tensor2,
+                           const std::vector<std::pair<int, int>>& idx,
+                           int tensor_out) {
 
   /*
    * Contractions on the form
@@ -538,11 +528,5 @@ void Contraction<Key>::contract(Key tensor1, Key tensor2,
   tensors.insert(make_pair(tensor_out,t_out));
 
 }
-
-/*
- * Add support for key values: char, int
- */
-template class Contraction<char>;
-template class Contraction<int>;
 
 }
