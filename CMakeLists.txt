@@ -5,9 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 # --- PICHI --------------------------------------------------------
 
+include_directories(include)
 add_subdirectory(lib)
-include_directories(lib)
-
 
 
 # --- Armadillo ----------------------------------------------------

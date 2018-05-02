@@ -5,7 +5,6 @@
  *
  * ***************************************************************************/
 
-
 #include "contraction.h"
 #include "slice_iterator.h"
 #include <armadillo>
