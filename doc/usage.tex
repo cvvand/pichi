@@ -1,3 +1,76 @@
-\chapter*{Using \packagename}
+\documentclass[paper=a4, oneside]{memoir}
 
-In this chapter we describe how to use \packagename.
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts}
+\usepackage{tensor}
+\usepackage{graphicx}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\chapterstyle{thatcher}
+
+\usepackage{chngcntr}
+\counterwithout{table}{chapter}
+
+\graphicspath{{./diagrams/}}
+
+
+\newcommand{\tens}[2]{\tensor{#1}{#2}}
+\newcommand{\packagename}{pichi}
+
+
+\title{Using \packagename}
+\author{Christian Walther Andersen\thanks{cwandersen@imada.sdu.dk}}
+%\date{}
+
+\begin{document}
+
+\lstdefinestyle{cc++}{
+	belowcaptionskip=1\baselineskip,
+	breaklines=true,
+	frame=L,
+	xleftmargin=\parindent,
+	language=C++,
+	showstringspaces=false,
+	basicstyle=\ttfamily,
+	keywordstyle=\bfseries\color{green!40!black},
+	commentstyle=\itshape\color{purple!40!black},
+	identifierstyle=\color{black},
+	stringstyle=\color{orange},
+}
+
+\lstset{style=cc++}
+
+\maketitle % Print the title
+
+\chapter*{The basics}
+
+This chapter describes how to use \packagename to do simple tensor 
+contractions. There are two central classes used for this purpose. The Tensor 
+class (\texttt{Tensor.h} and \texttt{Tensor.cc}) and the Contraction class 
+(\texttt{Contraction.h} and \texttt{Contraction.cc}). The Tensor class 
+essentially manages the storage of the data for each individual tensor, while 
+the Contraction class serves as a container for the tensors as well as 
+
+
+\begin{lstlisting}
+Tensor t( 3 , 64 );
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

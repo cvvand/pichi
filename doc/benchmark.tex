@@ -1,0 +1,59 @@
+\documentclass[paper=a4, oneside]{memoir}
+
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amsfonts}
+\usepackage{tensor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+\usepackage{siunitx}
+
+\chapterstyle{thatcher}
+
+\usepackage{chngcntr}
+\counterwithout{table}{chapter}
+
+\graphicspath{{./diagrams/}}
+
+
+\newcommand{\tens}[2]{\tensor{#1}{#2}}
+\newcommand{\packagename}{pichi}
+
+
+\title{Benchmark tests of certain diagrams}
+\author{Christian Walther Andersen\thanks{cwandersen@imada.sdu.dk}}
+%\date{}
+
+\begin{document}
+
+\maketitle % Print the title
+
+When doing tensor contractions, we always make a choice of the order in which 
+the indices are contracted. This choice can have a large impact on the runtime 
+of the contraction code. The intent of this paper is to show the runtime of all 
+possible (albeit topologically distinct) choices for all the distinct diagrams 
+that we need for hadron spectroscopy. Note that we restrict ourselves here to 
+contractions of up to four tensors and only tensors with rank 2 or 3 (mesons 
+and baryons).
+
+The result of the benchmark tests are shown in tables \ref{tab1} and 
+\ref{tab2}. In the diagrams, an oval is a rank 2 tensor and a triangle is a 
+rank 3 tensor, and each vertex is an index. The dotted lines indicate which 
+indices are contracted with which. The contraction pattern column shows the 
+order of the contractions along with any temporary tensors needed. Every line 
+in the contraction pattern is a single \packagename operation. The last 
+column shows an estimate of the time it takes to perform the complete 
+contraction operation on some machine.
+
+For diagrams 0 through 4 there is only one distinct way to perform the 
+contractions. For the rest of the diagrams there are at least two.
+
+
+\input{diagrams}
+
+
+
+
+
+\end{document}

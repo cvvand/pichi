@@ -12,8 +12,8 @@
 #include <iomanip>
 #include <chrono>
 
-#define N 3
-#define P 0
+#define N 10
+#define P 3
 #define SIZE 64
 
 using namespace pichi;
@@ -63,13 +63,14 @@ double stdev(vector<double> x) {
 
 void header() {
   cout << "Launching PICHI benchmark test 1" << endl << endl;
+  cout << "Computing the diagram A_abc B_abd C_ce D_de" << endl;
   cout << "   Running the test " << N << " times with tensors of size " <<
        SIZE << endl;
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
 
   cout << "---------------------------------- " << endl << endl;
   cout << "#\tTime/sec\tResult" << endl;
-  cout << "-------------------" << endl;
+  cout << "------------------------" << endl;
 
 }
 
@@ -96,25 +97,25 @@ int main() {
 
     Tensor a(3, SIZE);
     Tensor b(3, SIZE);
-    Tensor c(3, SIZE);
-    Tensor d(3, SIZE);
+    Tensor c(2, SIZE);
+    Tensor d(2, SIZE);
 
     fill3(a);
     fill3(b);
-    fill3(c);
-    fill3(d);
+    fill2(c);
+    fill2(d);
 
-    Contraction<char> con;
-    con.addTensor('A', a);
-    con.addTensor('B', b);
-    con.addTensor('C', c);
-    con.addTensor('D', d);
+    Contraction con;
+    con.addTensor(0, a); // A_abc
+    con.addTensor(1, b); // B_abd
+    con.addTensor(2, c); // C_ce
+    con.addTensor(3, d); // D_de
 
     auto start = chrono::steady_clock::now();
 
-    con.contract('A','D', {{2, 0}},'E');
-    con.contract('E','B', {{0, 0},{1,1}},'F'); // efd
-    cdouble r = con.contract('F','C',{{0,1},{1,2},{2,0}});
+    con.contract(2,3, {{1, 1}},4); // E_cd
+    con.contract(0,4, {{2, 0}},5); // F_abd
+    cdouble r = con.contract(5,1,{{0,0},{1,1},{2,2}});
 
 
     auto end = chrono::steady_clock::now();
