@@ -9,108 +9,68 @@ namespace pichi {
 
 /* ************************************************************************
  *
- * This file declares the Contraction class.
+ * This file declares the functions used to contract tensors
  *
  * A contraction is a unary or binary tensor operation, in which one or more
  * indices on the input tensors are contracted in order to create a single
- * output tensor which has fewer combined indices. An simple example is
- * matrix-matrix multiplication, which is the contraction of a single index
- * on two rank two tensors, creating a new rank two tensor. Another example
- * is the trace operation, which is a unary operation on a rank 2 tensor.
+ * output tensor which has fewer combined indices or a number (no indices). An
+ * simple example is matrix-matrix multiplication, which is the contraction
+ * of a single index on two rank two tensors, creating a new rank two tensor.
+ * Another example is the trace operation, which is a unary operation on a
+ * rank 2 tensor.
  *
- * To contract tensors using this class, they have to be added to the
- * collection with a name. After this there are two contraction
- * operations one can perform:
+ * There are two contraction operations one can perform:
  *
- * 1) Contracting all indices on one or two tensors in the collection,
- * resulting in an output number.
- * 2) Contracting some indices on one or two tensors in the collection,
- * creating a new tensor from the result. The result is added to the
- * collection, so it can be used for more contractions later. This gives no
- * output.
+ * 1) Contracting all indices on one or two tensors resulting in an output
+ * number.
+ * 2) Contracting some indices on one or two tensors, creating a new tensor
+ * from the result.
  *
- * The input tensors in the collection can be reused after a contraction in
- * all three cases. They are not modified (other than a possible internal
- * restructure of the data, which wont affect the actual tensor or
- * contractions).
+ * The input tensors are not modified during contractions (other than a
+ * possible internal restructure of the data, which wont affect the actual
+ * tensor or contractions).
  *
- * We tell the class which indices are contracted in a list of pairs of
- * integers. If we have in our collection a rank 3 tensor 'A' and a rank 5
+ * We tell the functions which indices are contracted in a list of pairs of
+ * integers. If we contract a rank 3 tensor 'A' and a rank 5
  * tensor 'B', then the list {{0,1},{2,4}} means that we want to contract the
  * first index of A with the second index of B, as well as the third index of
  * A with the fifth index of B. This corresponds to the contraction
  *
  *    A_abc B_daefc
  *
- * The result of this contraction is a rank 4 tensor, which is then inserted
- * into the collection. The same structure is used when contracting tensors
- * to numbers.
+ * The result of this contraction is a rank 4 tensor.
  *
  * ***********************************************************************/
 
-class Contraction {
+/*
+ * Contracts all indices on a single tensor, resulting in a number. For a
+ * rank 2 tensor, this is just the trace.
+ */
+cdouble contract(Tensor& tensor,
+                 const std::vector<std::pair<int, int>>& idx);
 
-public:
+/*
+ * Contract all indices on two tensors of equal rank. The resulting number
+ * is returned in the end.
+ * The input list of contracted indices must be the same length as the
+ * tensor ranks. Returns the result.
+ */
+cdouble contract(Tensor& tensor1, Tensor& tensor2,
+                 const std::vector<std::pair<int, int>>& idx);
 
-  /*
-   * Add a tensor to the collection with a given name. The name has to be
-   * unique.
-   */
-  void addTensor(int name, Tensor& tensor);
+/*
+ * Contract a number of indices on a tensor.
+ */
+void contract(Tensor& tensor1, const std::vector<std::pair<int, int>>& idx,
+              Tensor& tensor_out);
 
-  /*
-   * Get a tensor reference from the collection. This can be used to modify
-   * the tensor after insertion.
-   */
-  Tensor& getTensor(int tensor);
+/*
+ * Contract a number of indices on two tensors.
+ */
+void contract(Tensor& tensor1, Tensor& tensor2,
+              const std::vector<std::pair<int, int>>& idx,
+              Tensor& tensor_out);
 
-  /*
-   * Remove a tensor from the collection, if it exists.
-   */
-  void removeTensor(int tensor);
-
-  /*
-   * Contracts all indices on a single tensor, resulting in a number. For a
-   * rank 2 tensor, this is just the trace.
-   */
-  cdouble contract(int tensor,
-                   const std::vector<std::pair<int, int>>& idx);
-
-  /*
-   * Contract all indices on two tensors of equal rank. The resulting number
-   * is returned in the end.
-   * The input list of contracted indices must be the same length as the
-   * tensor ranks. Returns the result
-   */
-  cdouble contract(int tensor1, int tensor2,
-                const std::vector<std::pair<int, int>>& idx);
-
-  /*
-   * Contract a number of indices on a tensor in the collection. The
-   * resulting tensor is added to the collection with a given name.
-   */
-  void contract(int tensor1,
-                const std::vector<std::pair<int,int>>& idx, int tensor_out);
-
-  /*
-   * Contract a number of indices on two tensors in the collection. The
-   * resulting tensor is added to the collection with a given name.
-   */
-  void contract(int tensor1, int tensor2,
-                const std::vector<std::pair<int,int>>& idx, int tensor_out);
-
-private:
-
-  // The collection of tensors
-  std::unordered_map<int, Tensor> tensors;
-
-  void setStorage(Tensor& tensor, const std::vector<int> slicing);
-
-  // Detect whether a slice needs to be transposed before matrix multiplication.
-  int detectTranspose(const std::vector<int>& slice1,
-                      const std::vector<int>& slice2) const;
-
-};
 
 }
 

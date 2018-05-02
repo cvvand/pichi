@@ -16,20 +16,8 @@ using namespace arma;
 
 namespace pichi {
 
-void Contraction::addTensor(int name, Tensor& tensor) {
-  tensors.insert({name,tensor});
-}
-
-Tensor& Contraction::getTensor(int tensor) {
-  return tensors.at(tensor);
-}
-
-void Contraction::removeTensor(int tensor) {
-  tensors.erase(tensor);
-}
-
-int Contraction::detectTranspose(const std::vector<int>& slice1,
-                                 const std::vector<int>& slice2) const {
+int detectTranspose(const std::vector<int>& slice1,
+                    const std::vector<int>& slice2) {
 
   /*
    * This function detects whether a slice of a tensor needs to be transposed
@@ -91,8 +79,7 @@ int Contraction::detectTranspose(const std::vector<int>& slice1,
   }
 }
 
-void Contraction::setStorage(Tensor& tensor,
-                             const std::vector<int> slicing) {
+void setStorage(Tensor& tensor, const std::vector<int> slicing) {
 
   vector<int> storage = tensor.getStorage(); // The current storage
   int count = 0; // The currently found number of sliced indices
@@ -119,27 +106,16 @@ void Contraction::setStorage(Tensor& tensor,
 
 }
 
-cdouble Contraction::contract(int tensor,
-                              const std::vector<
-                                 std::pair<int,int>>& idx) {
-
-  // Check that we have the tensor.
-  Tensor* t;
-  try {
-    t = &tensors.at(tensor);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor) +
-                           " not found in collection");
-  }
+cdouble contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
 
   // Check that we have the correct number of contracted indices
-  if (idx.size()*2 != t->rank())
+  if (idx.size()*2 != tensor.rank())
     throw invalid_argument("Incompatible number of contracted indices");
   // Check that no index appears twice and that they are valid indices
   unordered_set<int> seen;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t->rank() ||
-        p.second < 0 || p.second >= t->rank())
+    if (p.first < 0 || p.first >= tensor.rank() ||
+        p.second < 0 || p.second >= tensor.rank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen.insert(p.first).second && seen.insert(p.second).second))
@@ -148,67 +124,41 @@ cdouble Contraction::contract(int tensor,
   }
 
   // Set up slice iterator
-  SingleSliceIterator it(t->rank(), t->size(), idx);
+  SingleSliceIterator it(tensor.rank(), tensor.size(), idx);
 
   // Set storage
-  setStorage(*t, it.getSlice1());
+  setStorage(tensor, it.getSlice1());
 
-  cdouble data[t->size()*t->size()];
+  cdouble data[tensor.size()*tensor.size()];
   cdouble res = 0.0;
 
 
   do {
 
-    t->getSlice(it.getSlice1(), data);
-    res += trace(cx_mat(data, t->size(), t->size()));
+    tensor.getSlice(it.getSlice1(), data);
+    res += trace(cx_mat(data, tensor.size(), tensor.size()));
 
   } while (it.nextContracted());
 
   return res;
 }
 
-cdouble Contraction::contract(int tensor1, int tensor2,
-                              const std::vector<
-                                  std::pair<int, int>>& idx) {
+cdouble contract(Tensor& t1, Tensor& t2,
+                 const std::vector<std::pair<int, int>>& idx) {
 
-  /*
-   * Contractions on the form
-   *   A_abcd B_dcba
-   * which we compute as a sum of traces:
-   *   tr(A_**00 B_00**) + tr(A_**10 B_01**) + tr(A_**20 B_02**) ...
-   *     + tr(A_**01 B_10**) + tr(A_**11 B_11**) + ...
-   */
-
-  // Get the tensors in question
-  Tensor* t1;
-  Tensor* t2;
-  try {
-    t1 = &tensors.at(tensor1);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor1) +
-                           " not found in collection");
-  }
-  try {
-    t2 = &tensors.at(tensor2);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor2) +
-                           " not found in collection");
-  }
-
-  if (t1->rank() != t2->rank())
-    throw invalid_argument("Tensors " + to_string(tensor1) + " and " +
-                           to_string(tensor2) + " does not have equal rank");
+  if (t1.rank() != t2.rank())
+    throw invalid_argument("Tensors do not have equal rank");
 
   // Check that we have the correct number of contracted indices
-  if (idx.size() != t1->rank())
+  if (idx.size() != t1.rank())
     throw invalid_argument("Incompatible number of contracted indices");
 
   // Check that we all indices are contracted and that they are valid indices
   unordered_set<int> seen1;
   unordered_set<int> seen2;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1->rank() ||
-        p.second < 0 || p.second >= t2->rank())
+    if (p.first < 0 || p.first >= t1.rank() ||
+        p.second < 0 || p.second >= t2.rank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
@@ -217,19 +167,19 @@ cdouble Contraction::contract(int tensor1, int tensor2,
   }
 
   // Set up the iterator
-  DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
+  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
 
   // Make sure tensor data is stored appropriately in the input tensors
-  setStorage(*t1, it.getSlice1());
-  setStorage(*t2, it.getSlice2());
+  setStorage(t1, it.getSlice1());
+  setStorage(t2, it.getSlice2());
 
   // Detect whether transposition is needed (sliced indices will not change
   // during iteration)
   int transpose_type = detectTranspose(it.getSlice1(),it.getSlice2());
 
   // Containers for the data for matrix multiplication
-  cdouble data1[t1->size()*t1->size()];
-  cdouble data2[t2->size()*t2->size()];
+  cdouble data1[t1.size()*t1.size()];
+  cdouble data2[t2.size()*t2.size()];
 
   cdouble result = 0.0;
 
@@ -237,10 +187,10 @@ cdouble Contraction::contract(int tensor1, int tensor2,
   do {
 
     // Get the current slice in matrix form
-    t1->getSlice(it.getSlice1(), data1);
-    t2->getSlice(it.getSlice2(), data2);
-    cx_mat m1(data1, t1->size(), t1->size());
-    cx_mat m2(data2, t2->size(), t2->size());
+    t1.getSlice(it.getSlice1(), data1);
+    t2.getSlice(it.getSlice2(), data2);
+    cx_mat m1(data1, t1.size(), t1.size());
+    cx_mat m2(data2, t2.size(), t2.size());
 
     if (transpose_type == 0 || transpose_type == 3) {
       // The two types are degenerate from this property of the trace:
@@ -260,9 +210,8 @@ cdouble Contraction::contract(int tensor1, int tensor2,
 
 }
 
-void Contraction::contract(int tensor1,
-                           const std::vector<std::pair<int, int>>& idx,
-                           int tensor_out) {
+void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
+              Tensor& tout) {
 
   /*
    * Contractions on the form
@@ -271,33 +220,20 @@ void Contraction::contract(int tensor1,
    *   B_012 = tr(A_**00012) + tr(A_**11012) + ...
    */
 
-  // Check that we have the tensor.
-  Tensor* t1;
-  try {
-    t1 = &tensors.at(tensor1);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor1) +
-                           " not found in collection");
-  }
-
-  // Check that the output key does not exist
-  if (tensors.find(tensor_out) != tensors.end())
-    throw invalid_argument("Output tensor key already exists");
-
   // Check that there are contracted indices
   if (idx.empty())
     throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
-  int free_out = t1->rank() - 2*idx.size();
+  int free_out = t1.rank() - 2*idx.size();
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
 
   // Check that we have no repeated indices
   unordered_set<int> seen;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1->rank() ||
-        p.second < 0 || p.second >= t1->rank())
+    if (p.first < 0 || p.first >= t1.rank() ||
+        p.second < 0 || p.second >= t1.rank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen.insert(p.first).second && seen.insert(p.second).second))
@@ -306,10 +242,10 @@ void Contraction::contract(int tensor1,
   }
 
   // Set up the iterator
-  SingleSliceIterator it(t1->rank(), t1->size(), idx);
+  SingleSliceIterator it(t1.rank(), t1.size(), idx);
 
   // Set storage for input tensor
-  setStorage(*t1, it.getSlice1());
+  setStorage(t1, it.getSlice1());
 
   // Set storage for output tensor
   vector<int> storage_out(free_out, 0);
@@ -321,12 +257,11 @@ void Contraction::contract(int tensor1,
     else
       storage_out[count2++] = i;
   }
-  // Create output tensor
-  Tensor t_out(free_out, t1->size(), storage_out);
+  tout.setStorage(storage_out);
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1->size() * t1->size()];
-  cdouble data_out[t_out.size() * t_out.size()];
+  cdouble data1[t1.size() * t1.size()];
+  cdouble data_out[tout.size() * tout.size()];
 
   do { // Loop over non-sliced free indices on the output tensor
 
@@ -340,9 +275,9 @@ void Contraction::contract(int tensor1,
       do { // Loop through contracted, non-sliced indices on input tensors
 
         // Get the current slices in matrix form
-        t1->getSlice(it.getSlice1(), data1);
+        t1.getSlice(it.getSlice1(), data1);
 
-        data_out[x] += trace(cx_mat(data1, t1->size(), t1->size()));
+        data_out[x] += trace(cx_mat(data1, t1.size(), t1.size()));
 
         // Increase the contracted non-sliced indices on input tensors
       } while (it.nextContracted());
@@ -353,18 +288,14 @@ void Contraction::contract(int tensor1,
     } while (it.nextSlicedFree());
 
     // Set the current slice of the output tensor
-    t_out.setSlice(it.getSliceOut(), data_out);
+    tout.setSlice(it.getSliceOut(), data_out);
 
   } while (it.nextNonSlicedFree());
 
-  // Insert the new tensor into the collection
-  tensors.insert(make_pair(tensor_out,t_out));
-
 }
 
-void Contraction::contract(int tensor1, int tensor2,
-                           const std::vector<std::pair<int, int>>& idx,
-                           int tensor_out) {
+void contract(Tensor& t1, Tensor& t2,
+              const std::vector<std::pair<int, int>>& idx, Tensor& tout) {
 
   /*
    * Contractions on the form
@@ -386,32 +317,12 @@ void Contraction::contract(int tensor1, int tensor2,
    *
    */
 
-  // Get the tensors in question
-  Tensor* t1;
-  Tensor* t2;
-  try {
-    t1 = &tensors.at(tensor1);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor1) +
-                           " not found in collection");
-  }
-  try {
-    t2 = &tensors.at(tensor2);
-  } catch (out_of_range& e) {
-    throw invalid_argument("Tensor " + to_string(tensor2) +
-                           " not found in collection");
-  }
-
-  // Check that the output key does not exist
-  if (tensors.find(tensor_out) != tensors.end())
-    throw invalid_argument("Output tensor key already exists");
-
   // Check that there are contracted indices
   if (idx.empty())
     throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
-  int free_out = t1->rank() + t2->rank() - 2*idx.size();
+  int free_out = t1.rank() + t2.rank() - 2*idx.size();
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
 
@@ -419,8 +330,8 @@ void Contraction::contract(int tensor1, int tensor2,
   unordered_set<int> seen1;
   unordered_set<int> seen2;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1->rank() ||
-        p.second < 0 || p.second >= t2->rank())
+    if (p.first < 0 || p.first >= t1.rank() ||
+        p.second < 0 || p.second >= t2.rank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
@@ -429,11 +340,11 @@ void Contraction::contract(int tensor1, int tensor2,
   }
 
   // Set up the iterator
-  DoubleSliceIterator it(t1->rank(), t2->rank(), t1->size(), idx);
+  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
 
   // Make sure tensor data is stored appropriately in the input tensors
-  setStorage(*t1, it.getSlice1());
-  setStorage(*t2, it.getSlice2());
+  setStorage(t1, it.getSlice1());
+  setStorage(t2, it.getSlice2());
 
   // Set the storage for the output tensor
   vector<int> storage_out(free_out, 0);
@@ -445,17 +356,16 @@ void Contraction::contract(int tensor1, int tensor2,
     else
       storage_out[count2++] = i;
   }
-  // Create output tensor
-  Tensor t_out(free_out, t1->size(), storage_out);
+  tout.setStorage(storage_out);
 
   // Figure out if we need to transpose matrices (sliced indices do not
   // change during iteration)
   int transpose_type = detectTranspose(it.getSlice1(), it.getSlice2());
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1->size() * t1->size()];
-  cdouble data2[t2->size() * t2->size()];
-  cdouble data_out[t_out.size() * t_out.size()];
+  cdouble data1[t1.size() * t1.size()];
+  cdouble data2[t2.size() * t2.size()];
+  cdouble data_out[tout.size() * tout.size()];
 
   do { // Loop through free indices, not sliced on the output tensor
 
@@ -472,10 +382,10 @@ void Contraction::contract(int tensor1, int tensor2,
         do { // Loop through contracted, non-sliced indices on input tensors
 
           // Get the current slices in matrix form
-          t1->getSlice(it.getSlice1(), data1);
-          t2->getSlice(it.getSlice2(), data2);
-          cx_mat m1(data1, t1->size(), t1->size());
-          cx_mat m2(data2, t2->size(), t2->size());
+          t1.getSlice(it.getSlice1(), data1);
+          t2.getSlice(it.getSlice2(), data2);
+          cx_mat m1(data1, t1.size(), t1.size());
+          cx_mat m2(data2, t2.size(), t2.size());
 
           // Some types are degenerate, see comments in
           // contract(char,char,vector)
@@ -493,17 +403,17 @@ void Contraction::contract(int tensor1, int tensor2,
       } while (it.nextSlicedFree());
 
       // Set the current slice of the output tensor
-      t_out.setSlice(it.getSliceOut(), data_out);
+      tout.setSlice(it.getSliceOut(), data_out);
 
     } else {
 
       // Mult branch
 
       // Get the current slices in matrix form
-      t1->getSlice(it.getSlice1(), data1);
-      t2->getSlice(it.getSlice2(), data2);
-      cx_mat m1(data1, t1->size(), t1->size());
-      cx_mat m2(data2, t2->size(), t2->size());
+      t1.getSlice(it.getSlice1(), data1);
+      t2.getSlice(it.getSlice2(), data2);
+      cx_mat m1(data1, t1.size(), t1.size());
+      cx_mat m2(data2, t2.size(), t2.size());
 
       cx_mat mout; // The output slice in matrix form.
       // Do the multiplication based on transpose type
@@ -517,15 +427,12 @@ void Contraction::contract(int tensor1, int tensor2,
         mout = strans(m2 * m1);
 
       // Set the slice on the output tensor
-      t_out.setSlice(it.getSliceOut(), mout.memptr());
+      tout.setSlice(it.getSliceOut(), mout.memptr());
 
     }
 
     // Increase the free indices not sliced on the output tensor
   } while (it.nextNonSlicedFree());
-
-  // Insert the new tensor into the collection
-  tensors.insert(make_pair(tensor_out,t_out));
 
 }
 

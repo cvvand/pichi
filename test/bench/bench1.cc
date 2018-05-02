@@ -69,20 +69,20 @@ void header() {
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
 
   cout << "---------------------------------- " << endl << endl;
-  cout << "#\tTime/sec\tResult" << endl;
+  cout << "#\tT/ms\tResult" << endl;
   cout << "------------------------" << endl;
 
 }
 
 void writeRun(int n, double etot, cdouble res) {
-  cout << setprecision(3) << n << "\t" << etot << "\t" << res << endl;
+  cout << setprecision(3) << n << "\t" << 1000*etot << "\t\t" << res << endl;
 }
 
 void report(vector<double> times) {
   cout << endl << "---- Report: ------------------" << endl << endl;
 
-  cout << setprecision(3) << "Time : (" << mean(times) << " +/- " <<
-       stdev(times) << ") sec." << endl;
+  cout << setprecision(3) << "Time : (" << 1000*mean(times) << " +/- " <<
+          setprecision(2) <<1000*stdev(times) << ") ms." << endl;
 }
 
 int main() {
@@ -105,17 +105,14 @@ int main() {
     fill2(c);
     fill2(d);
 
-    Contraction con;
-    con.addTensor(0, a); // A_abc
-    con.addTensor(1, b); // B_abd
-    con.addTensor(2, c); // C_ce
-    con.addTensor(3, d); // D_de
-
     auto start = chrono::steady_clock::now();
 
-    con.contract(2,3, {{1, 1}},4); // E_cd
-    con.contract(0,4, {{2, 0}},5); // F_abd
-    cdouble r = con.contract(5,1,{{0,0},{1,1},{2,2}});
+    Tensor e(2,64);
+    contract(c,d, {{1, 1}},e); // E_cd
+
+    Tensor f(3,64);
+    contract(a,e, {{2, 0}},f); // F_abd
+    cdouble r = contract(f,b,{{0,0},{1,1},{2,2}});
 
 
     auto end = chrono::steady_clock::now();
