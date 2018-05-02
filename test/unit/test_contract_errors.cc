@@ -90,6 +90,18 @@ TEST(ContractErrors, SingleTensorToTensorErrorIfContractedAreOutOfRank) {
   EXPECT_THROW(contract(t,{{4,1}},t1), invalid_argument);
 }
 
+TEST(ContractErrors, SingleTensorToTensorErrorIfOutputHasWrongRank) {
+  Tensor t(6,2);
+  Tensor t2(4,2);
+  EXPECT_THROW(contract(t,{{0,1},{2,3}},t2), invalid_argument);
+}
+
+TEST(ContractErrors, SingleTensorToTensorErrorIfOutputHasWrongSize) {
+  Tensor t(6,2);
+  Tensor t2(2,4);
+  EXPECT_THROW(contract(t,{{0,1},{2,3}},t2), invalid_argument);
+}
+
 
 
 TEST(ContractErrors, DoubleTensorToTensorErrorIfNoContractedIndices) {
@@ -120,6 +132,20 @@ TEST(ContractErrors, DoubleTensorToTensorErrorIfContractedAreOutOfRank) {
   Tensor t3(4,2);
   EXPECT_THROW(contract(t1,t2,{{0,-1}},t3), invalid_argument);
   EXPECT_THROW(contract(t1,t2,{{4,1}},t3), invalid_argument);
+}
+
+TEST(ContractErrors, DoubleTensorToTensorErrorIfOutputHasWrongRank) {
+  Tensor t1(4,2);
+  Tensor t2(2,2);
+  Tensor t3(6,2);
+  EXPECT_THROW(contract(t1,t2,{{0,0}},t3), invalid_argument);
+}
+
+TEST(ContractErrors, DoubleTensorToTensorErrorIfOutputHasWrongSize) {
+  Tensor t1(4,2);
+  Tensor t2(2,2);
+  Tensor t3(4,4);
+  EXPECT_THROW(contract(t1,t2,{{0,0}},t3), invalid_argument);
 }
 
 

@@ -59,13 +59,17 @@ cdouble contract(Tensor& tensor1, Tensor& tensor2,
                  const std::vector<std::pair<int, int>>& idx);
 
 /*
- * Contract a number of indices on a tensor.
+ * Contract a number of indices on a tensor. The resulting tensor data will
+ * be inserted in tensor_out, which must have the correct rank and size
+ * before the call.
  */
 void contract(Tensor& tensor1, const std::vector<std::pair<int, int>>& idx,
               Tensor& tensor_out);
 
 /*
- * Contract a number of indices on two tensors.
+ * Contract a number of indices on two tensors. The resulting tensor data will
+ * be inserted in tensor_out, which must have the correct rank and size
+ * before the call.
  */
 void contract(Tensor& tensor1, Tensor& tensor2,
               const std::vector<std::pair<int, int>>& idx,

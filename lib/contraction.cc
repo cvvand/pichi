@@ -229,6 +229,12 @@ void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
 
+  // Check that the output matches
+  if (tout.rank() != free_out)
+    throw invalid_argument("Output tensor has wrong rank");
+  if (tout.size() != t1.size())
+    throw invalid_argument("Tensor sizes must be equal");
+
   // Check that we have no repeated indices
   unordered_set<int> seen;
   for (pair<int,int> p : idx) {
@@ -325,6 +331,12 @@ void contract(Tensor& t1, Tensor& t2,
   int free_out = t1.rank() + t2.rank() - 2*idx.size();
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
+
+  // Check that the output matches
+  if (tout.rank() != free_out)
+    throw invalid_argument("Output tensor has wrong rank");
+  if (tout.size() != t1.size() || tout.size() != t2.size())
+    throw invalid_argument("Tensor sizes must be equal");
 
   // Check that we have no repeated indices
   unordered_set<int> seen1;
