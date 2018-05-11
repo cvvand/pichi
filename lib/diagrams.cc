@@ -6,82 +6,336 @@
 using namespace arma;
 using namespace std;
 
+
+/* Utility functions */
+namespace {
+
+/*
+ * Matches two strings:
+ * Finds the subset of characters in the strings which occurs in both. The
+ * result is a list of pairs of integers giving the position of the matches.
+ *
+ * Example:
+ *    "abcd"+"aebf" -> [(0,0),(1,2)] ,
+ * since "a" is in position 0 and 0, and "b" is in position 1 and 2.
+ *
+ * The result is empty if there are no matches.
+ */
+vector<pair<int,int>> matchChars(string s1, string s2) {
+
+  vector<pair<int,int>> res;
+
+  for (int i = 0; i < s2.length(); ++i) {
+    int pos = s1.find(s2[i]);
+    if (pos != string::npos)
+      res.push_back(make_pair(pos,i));
+  }
+
+  return res;
+
+};
+
+/*
+ * Combines two strings, cutting away the duplicates:
+ * This function basically finds the symmetric difference between the two
+ * strings. The result is this difference, starting with string 1, in order.
+ *
+ * Example:
+ *    "abcd"+"aebf" -> "cdef"
+ * since "a" and "b" occur in both strings, and the rest is in order.
+ */
+string residualString(string s1, string s2) {
+  string res = "";
+  for (char s : s1) {
+    if (s2.find(s) == string::npos)
+      res += s;
+  }
+  for (char s : s2) {
+    if (s1.find(s) == string::npos)
+      res += s;
+  }
+  return res;
+}
+
+}
+
 namespace pichi {
 
-cdouble diagram0(Tensor& t) {
-  return contract(t,{{0,1}});
+cdouble diagram0(vector<DiagramNode>& nodes) {
+  return contract(*nodes[0].t,{{0,1}});
 }
 
-cdouble diagram1(Tensor& t1, const std::string& idx1,
-                 Tensor& t2, const std::string& idx2) {
+cdouble diagram1(vector<DiagramNode>& nodes) {
 
-  if (idx2[0] == idx1[0] && idx2[1] == idx1[1]) {
-    return contract(t1,t2, {{0,0},{1,1}});
-  } else {
-    return contract(t1,t2, {{0,1},{1,0}});
-  }
+  return contract(*nodes[0].t,*nodes[1].t,
+                  matchChars(nodes[0].idx,nodes[1].idx));
 
 }
 
-cdouble diagram2(Tensor& t1, const std::string& idx1,
-                 Tensor& t2, const std::string& idx2,
-                 Tensor& t3, const std::string& idx3) {
+cdouble diagram2(vector<DiagramNode>& nodes) {
 
-  int i1 = 0;
-  int i2 = 0;
+  // Contraction order is irrelevant for this diagram: all choices of two
+  // nodes will be equivalent
 
-  Tensor t4(2,t1.size());
-  if (idx1[0] == idx2[0]) {
-    contract(t1, t2, {{0, 0}}, t4);
-    i1 = 1; i2 = 1;
-  }
-  else if (idx1[0] == idx2[1]) {
-    contract(t1, t2, {{0, 1}}, t4);
-    i1 = 1; i2 = 0;
-  }
-  else if (idx1[1] == idx2[0]) {
-    contract(t1, t2, {{1, 0}}, t4);
-    i1 = 0; i2 = 1;
-  }
-  else if (idx1[1] == idx2[1]) {
-    contract(t1, t2, {{1, 1}}, t4);
-    i1 = 0; i2 = 0;
-  }
+  Tensor* t1 = nodes[0].t; string idx1 = nodes[0].idx;
+  Tensor* t2 = nodes[1].t; string idx2 = nodes[1].idx;
+  Tensor* t3 = nodes[2].t; string idx3 = nodes[2].idx;
 
-  if (idx1[i1] == idx3[1] && idx2[i2] == idx3[0])
-    return contract(t4,t3,{{0,1},{1,0}});
-  else
-    return contract(t4,t3,{{0,0},{1,1}});
+  Tensor t4(2,t1->size());
+  contract(*t1, *t2, matchChars(idx1,idx2),t4);
+  string idx4 = residualString(idx1,idx2);
+
+  return contract(t4, *t3, matchChars(idx4,idx3));
 
 }
 
-cdouble diagram3(Tensor& t1, const std::string& idx1,
-                 Tensor& t2, const std::string& idx2,
-                 Tensor& t3, const std::string& idx3,
-                 Tensor& t4, const std::string& idx4) {
+cdouble diagram3(vector<DiagramNode>& nodes) {
 
-  int i1 = 0;
-  int i2 = 0;
+  // Strategy: Contract two nodes and handle the rest as a diagram2
 
-  Tensor t5(2,t1.size());
-  if (idx1[1] == idx2[0]) {
-    contract(t1, t2, {{1, 0}}, t5);
-    i1 = 0; i2 = 1;
-  } else {
-    contract(t1, t2, {{1, 1}}, t5);
-    i1 = 0; i2 = 0;
+  vector<DiagramNode> nodes2; // The nodes we will send to diagram2
+
+  Tensor* x1; string xidx1;
+  Tensor* x2; string xidx2;
+
+  for (DiagramNode dn : nodes) {
+    // We need to find two connected nodes and contract them. The rest is
+    // passed on to diagram2
+    if (xidx1.empty()) {
+      // We always grab the first node
+      x1 = dn.t;
+      xidx1 = dn.idx;
+    }
+    else if (xidx2.empty() && !matchChars(xidx1, dn.idx).empty()) {
+      // This node is the first we have seen that is connected to the other.
+      // Grab it!
+      x2 = dn.t;
+      xidx2 = dn.idx;
+    }
+    else {
+      // We either a) already have two connected nodes, or b) this node is
+      // not connected to the first. Pass it on to diagram2.
+      nodes2.push_back(dn);
+    }
   }
 
-  Tensor t6(2,t1.size());
+  // Create a temporary tensor for the contraction.
+  Tensor* t5 = new Tensor(2, x1->size());
+  contract(*x1, *x2, matchChars(xidx1, xidx2), *t5);
+  string idx5 = residualString(xidx1, xidx2);
 
-  if (idx2[i2] == idx3[0]) {
-    contract(t5, t3, {{1, 0}}, t6);
-  } else {
-    contract(t5, t3, {{0, 1}}, t6);
-  }
-  return contract(t6,t4,{{1,0},{0,1}});
+  // Create a new node for the tensor.
+  DiagramNode n5;
+  n5.t = t5; n5.idx = idx5;
+  nodes2.push_back(n5);
+
+  // Compute the rest of the contraction as diagram2
+  cdouble res = diagram2(nodes2);
+  delete t5;
+  return res;
 
 }
+
+
+cdouble diagram4(vector<DiagramNode>& nodes) {
+
+  return contract(*nodes[0].t,*nodes[1].t,
+                  matchChars(nodes[0].idx,nodes[1].idx));
+
+}
+
+
+cdouble diagram5(vector<DiagramNode>& nodes) {
+
+  // Strategy: we contract the rank 2 tensor with a rank 3 tensor and compute
+  // the rest as an instance of diagram4
+
+  vector<DiagramNode> nodes2; // The nodes to pass to diagram4
+
+  Tensor* x1; string xidx1;
+  Tensor* x2; string xidx2;
+
+  bool found_rank3 = false;
+  for (DiagramNode dn : nodes) {
+    // We need to find the rank 2 tensor and a rank 3 tensor and contract
+    // them. The last one is passed on to diagram4
+    if (dn.t->rank() == 2) {
+      // Found the rank 2 tensor!
+      x1 = dn.t;
+      xidx1 = dn.idx;
+    }
+    else if (found_rank3) {
+      // The node is the second rank 3 tensor. Pass it on to diagram4
+      nodes2.push_back(dn);
+    }
+    else {
+      // The first rank 3 tensor. Grab it!
+      x2 = dn.t;
+      xidx2 = dn.idx;
+      found_rank3 = true;
+    }
+  }
+
+  // Create a temporary tensor and contract.
+  Tensor *t4 = new Tensor(3, x1->size());
+  contract(*x1, *x2, matchChars(xidx1,xidx2), *t4);
+  string idx4 = residualString(xidx1,xidx2);
+
+  // Create the new node.
+  DiagramNode n4;
+  n4.t = t4; n4.idx = idx4;
+  nodes2.push_back(n4);
+
+  // Compute the rest of the contraction as a diagram4
+  cdouble res = diagram4(nodes2);
+  delete t4;
+  return res;
+
+}
+
+cdouble diagram6(vector<DiagramNode>& nodes) {
+
+  // Strategy: Contract the two rank 2 tensors and compute the rest of the
+  // diagram as a diagram5
+
+  vector<DiagramNode> nodes2; // The nodes to pass to diagram5
+
+  Tensor* x1; string xidx1;
+  Tensor* x2; string xidx2;
+
+  bool found_one = false;
+  for (DiagramNode dn : nodes) {
+    // We look for the two rank 2 tensors to contract here. Rank 3 tensors
+    // are passed on to diagram5
+    if (dn.t->rank() == 2) {
+      if (found_one) {
+        // The second rank 2 tensor.
+        x2 = dn.t;
+        xidx2 = dn.idx;
+      } else {
+        // The first rank 2 tensor
+        x1 = dn.t;
+        xidx1 = dn.idx;
+        found_one = true;
+      }
+    }
+    else {
+      // Rank 3 tensor. Pass it on.
+      nodes2.push_back(dn);
+    }
+  }
+
+  // Contract the two rank 2 tensors.
+  Tensor* t5 = new Tensor(2,x1->size());
+  contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
+  string idx5 = residualString(xidx1,xidx2);
+
+  // Create the new node.
+  DiagramNode n5;
+  n5.t = t5; n5.idx = idx5;
+  nodes2.push_back(n5);
+
+  // Compute the rest as a diagram5.
+  cdouble res = diagram5(nodes2);
+  delete t5;
+  return res;
+
+}
+
+cdouble diagram7(vector<DiagramNode>& nodes) {
+
+  // Strategy: contract a rank 2 and a rank 3 tensor and treat the rest as an
+  // instance of diagram5
+
+  Tensor* x1; string xidx1;
+  Tensor* x2; string xidx2;
+
+  vector<DiagramNode> nodes2; // The nodes to pass to diagram5
+
+  bool found_rank2 = false;
+  bool found_rank3 = false;
+  for (DiagramNode dn : nodes) {
+    // Find a rank 2 and a rank 3 tensor, and pass the rest on
+    if (dn.t->rank() == 2) {
+      if (found_rank2) {
+        nodes2.push_back(dn);
+      }
+      else {
+        x1 = dn.t;
+        xidx1 = dn.idx;
+        found_rank2 = true;
+      }
+    }
+    else {
+      if (found_rank3) {
+        nodes2.push_back(dn);
+      }
+      else {
+        x2 = dn.t;
+        xidx2 = dn.idx;
+        found_rank3 = true;
+      }
+    }
+  }
+
+  // Contract the two tensors
+  Tensor* t5 = new Tensor(3, x1->size());
+  contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
+  string idx5 = residualString(xidx1,xidx2);
+
+  // Create the new node
+  DiagramNode n5;
+  n5.t = t5; n5.idx = idx5;
+  nodes2.push_back(n5);
+
+  // Compute the result as diagram5
+  cdouble res = diagram5(nodes2);
+  delete t5;
+  return res;
+
+}
+
+cdouble diagram8(vector<DiagramNode>& nodes) {
+
+  // Strategy: Contract two tensors connected by two indices and compute the
+  // rest as a diagram5
+
+  vector<DiagramNode> nodes2;
+
+  // We always use the first node. We need to find the node connected to the
+  // first one by two indices
+  Tensor* x; string xidx;
+
+  for (int i = 1; i < 4; ++i) {
+    if (matchChars(nodes[0].idx, nodes[i].idx).size() == 2) {
+      x = nodes[i].t;
+      xidx = nodes[i].idx;
+    }
+    else {
+      nodes2.push_back(nodes[i]);
+    }
+  }
+
+  // Contract the two tensors
+  Tensor* t5 = new Tensor(2, x->size());
+  contract(*nodes[0].t, *x, matchChars(nodes[0].idx, xidx), *t5);
+  string idx5 = residualString(nodes[0].idx, xidx);
+
+  // Create the new node
+  DiagramNode n5;
+  n5.t = t5; n5.idx = idx5;
+  nodes2.push_back(n5);
+
+  // Compute the result as diagram5
+  cdouble res = diagram5(nodes2);
+  delete t5;
+  return res;
+
+}
+
+
+
+
 
 }
 

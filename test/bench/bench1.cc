@@ -6,14 +6,15 @@
 
 #include "tensor.h"
 #include "contraction.h"
+#include "diagrams.h"
 
 #include <random>
 #include <iostream>
 #include <iomanip>
 #include <chrono>
 
-#define N 10
-#define P 3
+#define N 100
+#define P 20
 #define SIZE 64
 
 using namespace pichi;
@@ -95,25 +96,31 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    Tensor a(3, SIZE);
-    Tensor b(3, SIZE);
-    Tensor c(2, SIZE);
-    Tensor d(2, SIZE);
+    Tensor* a = new Tensor(2, SIZE);
+    Tensor* b = new Tensor(2, SIZE);
+    Tensor* c = new Tensor(2, SIZE);
+    Tensor* d = new Tensor(2, SIZE);
 
-    fill3(a);
-    fill3(b);
-    fill2(c);
-    fill2(d);
+    fill2(*a);
+    fill2(*b);
+    fill2(*c);
+    fill2(*d);
+
+    DiagramNode dna, dnb, dnc, dnd;
+    dna.t = a; dna.idx = "ab";
+    dnb.t = b; dnb.idx = "bc";
+    dnc.t = c; dnc.idx = "cd";
+    dnd.t = d; dnd.idx = "ad";
+
+    vector<DiagramNode> nodes;
+    nodes.push_back(dna);
+    nodes.push_back(dnb);
+    nodes.push_back(dnc);
+    nodes.push_back(dnd);
 
     auto start = chrono::steady_clock::now();
 
-    Tensor e(2,64);
-    contract(c,d, {{1, 1}},e); // E_cd
-
-    Tensor f(3,64);
-    contract(a,e, {{2, 0}},f); // F_abd
-    cdouble r = contract(f,b,{{0,0},{1,1},{2,2}});
-
+    cdouble r = diagram3(nodes);
 
     auto end = chrono::steady_clock::now();
 
@@ -123,6 +130,8 @@ int main() {
       times.push_back(et_tot);
       writeRun(i, et_tot, r);
     }
+
+    delete a; delete b; delete c; delete d;
 
   }
 
