@@ -52,6 +52,7 @@ add_executable(all_ut
         test_diagrams.cc
         test_double_slice_iterator.cc
         test_single_slice_iterator.cc
+        test_split_string.cc
         test_tensor.cc
         test_tensor_getsetslice.cc
         test_tensor_storage.cc
