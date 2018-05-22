@@ -8,12 +8,11 @@ namespace pichi {
 
 /* ************************************************************************
  *
- * This file declares the contraction diagrams that are important for hadron
- * spectroscopy. Including only processes involving a maximum of four hadrons
- * in total and only diagrams with mesons and baryons, there are 8
- * topologically distinct diagrams that we might want to compute. Other
- * disconnected diagrams also exist, but those will be sums of diagrams
- * declared here or diagrams that have no basis in quantum field theory.
+ * This file declares the optimal way of computing diagrams that are
+ * important for hadron spectroscopy. For processes including 1-1, 2-1 and
+ * 2-2 scattering with mesons and baryons, there are only 8 topologically
+ * distinct diagrams we need to compute. The functionality declared in this
+ * file makes it easy to compute these diagrams in the most optimal way.
  *
  * A diagram in this context is a set of tensors and a corresponding set of
  * index strings. For example, we could imagine the diagram
@@ -33,11 +32,22 @@ namespace pichi {
  * is topologically the same diagram as the one before, but will of course
  * yield a different result. This is all handled by the evaluating functions.
  *
+ * The highest level function in this collection is the "compute" function,
+ * which takes as input a diagrammatic string expression and converts it to a
+ * (set of) diagram(s) that are computed. For example, consider a list of
+ * 100 tensors computed from earlier data analysis. We can then do the following
+ *
+ * compute("34ab72acd12bcd52ee", tensors);
+ *
+ * where "tensors" is the list of tensors. That call will compute the
+ * contraction of the tensors with index 34 (rank 2), 72 and 12 (both rank 3)
+ * according to the rules of diagram 5 and the diagram 0 contraction of the
+ * rank 2 tensor with index 52. The two resulting numbers are added together
+ * and delivered as a result.
+ *
  * This file defines the struct DiagramNode, which just contains a pointer to
  * a tensor and a string. A diagram is then a list of DiagramNodes,
  * essentially yielding a graph.
- *
- * All diagrams are computed in the most efficient way with respect to runtime.
  *
  * For an overview of the diagrams, see the documentation --> benchmark
  * document.
@@ -45,7 +55,37 @@ namespace pichi {
  *
  * ***********************************************************************/
 
+/*
+ * Splits a contraction string into connected components. For example, the
+ * string
+ * "12ab77acd103cdb21ee"
+ * is split into two connected parts:
+ * "12ab77acd103cdb"
+ * "21ee"
+ */
+std::vector<std::string> split(std::string);
 
+/*
+ * Computes a diagrammatic contraction expression. Takes as input a
+ * contraction expression which can contain an arbitrary number of
+ * disconnected diagrams. The other argument is a list of the tensors that
+ * are used for the contractions.
+ * A contraction string could be
+ * "0ab1bc2cd4ad"
+ * which is a single connected diagram (diagram 3) consisting of four rank 2
+ * tensors with index 0, 1, 2 and 4 in the input collection.
+ * An example of disconnected diagrams could be
+ * "0abc1abc2dd3ee"
+ * which consists of one diagram 4 expression ("0abc1abc") and two diagram 0
+ * expressions ("2dd" and "3ee").
+ * The return value is the result of all of the connected diagrams added
+ * together.
+ */
+cdouble compute(std::string, std::vector<Tensor>& tensors);
+
+/*
+ * A container for a tensor and its indices.
+ */
 struct DiagramNode {
   Tensor* t;
   std::string idx;

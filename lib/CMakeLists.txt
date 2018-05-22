@@ -6,5 +6,4 @@ add_library(pichi
         double_slice_iterator.cc
         single_slice_iterator.cc
         tensor.cc
-        util.cc
         )

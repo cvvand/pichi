@@ -1,4 +1,4 @@
-#include "util.h"
+#include "diagrams.h"
 #include "gtest/gtest.h"
 
 
@@ -38,6 +38,13 @@ TEST(SplitString, SplitTwoConnectedAndTwoSingles) {
   EXPECT_EQ("1abc3abc", r[0]);
   EXPECT_EQ("4ee", r[1]);
   EXPECT_EQ("2dd", r[2]);
+}
+
+TEST(SplitString, TwoDigitTensor) {
+  vector<string> r = split("2ab0ab10cd1cd");
+  ASSERT_EQ(2, r.size());
+  EXPECT_EQ("2ab0ab", r[0]);
+  EXPECT_EQ("10cd1cd", r[1]);
 }
 
 }

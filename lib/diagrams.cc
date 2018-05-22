@@ -61,6 +61,161 @@ string residualString(string s1, string s2) {
 
 namespace pichi {
 
+vector<string> split(string s) {
+
+  /* We first split the string into nodes:
+   * "0abc1ad2de3bce" --> "0abc", "1ad", "2de", "3bce".
+   */
+
+  queue<string> nodes;    // Container for the nodes
+  string this_node;       // The current node
+  bool digit_last = true; // Currently looking at a multi digit number?
+
+  for (char c : s) {
+    if (isdigit(c)) {
+      // c is a digit
+      if (isdigit(c) && !digit_last) {
+        // The last char was an index, so this is a new node.
+        // Save the old node and start a new one.
+        nodes.push(this_node);
+        this_node.clear();
+        digit_last = true;
+      }
+    } else {
+      // c is not a digit
+      digit_last = false;
+    }
+    // Add c to the current node
+    this_node += c;
+  }
+  if (!this_node.empty()) {
+    // Push the last node into the queue
+    nodes.push(this_node);
+  }
+
+  // Now we add connected nodes into components
+  vector<string> comps; // The connected components
+  while (!nodes.empty()) {
+
+    // Start a new component
+    string this_comp = nodes.front();
+    nodes.pop();
+
+    // Check is the remaining nodes can be added to the component
+    int count = 0;
+    while (count++ < nodes.size()) {
+
+      // Grab the next node
+      string node = nodes.front();
+      nodes.pop();
+
+      for (char c : node) {
+        // Check if any of the indices of the node matches the component
+        if (!isdigit(c) && this_comp.find(c) != string::npos) {
+
+          // The index matches. We add the node to the component
+          this_comp += node;
+
+          // We now have to check all the remaining nodes again, since we
+          // might have new indices that were not in the component before.
+          count = 0;
+          break;
+        }
+      }
+      if (count != 0) {
+        // No more nodes, so we're done.
+        nodes.push(node);
+      }
+
+    }
+
+    // Add this component to the list.
+    comps.push_back(this_comp);
+
+    // If there are remaining nodes we start a new component. Otherwise
+    // we're done.
+
+  }
+
+  return comps;
+
+}
+
+
+cdouble compute(std::string s, std::vector<Tensor>& tensors) {
+  cdouble result = 0.0;
+
+  // We iterate through all the connected components of the diagram
+  for (string comp : split(s)) {
+
+    vector<DiagramNode> nodes; // List of nodes we need for this diagram
+    int idx = 0;
+    // We keep count of the number of rank 2 and rank 3 tensors
+    int n_rank2 = 0;
+    int n_rank3 = 0;
+    while (idx < comp.size()) {
+
+      // Get the tensor index
+      string tensor = "";
+      while (isdigit(comp[idx]))
+        tensor += comp[idx++];
+      int tensor_idx = stoi(tensor);
+
+      // Get the contraction string
+      string pattern = "";
+      while (!isdigit(comp[idx]) && idx < comp.size())
+        pattern += comp[idx++];
+
+      // Create the node
+      DiagramNode node;
+      node.idx = pattern;
+      node.t = &tensors[tensor_idx];
+      if (node.t->rank() == 2)
+        n_rank2++;
+      else
+        n_rank3++;
+      nodes.push_back(node);
+
+    }
+
+    // Choose the correct diagram based on the ranks of the tensors
+    if (n_rank2 == 1 && n_rank3 == 0)
+      result += diagram0(nodes);
+    else if (n_rank2 == 2 && n_rank3 == 0)
+      result += diagram1(nodes);
+    else if (n_rank2 == 3)
+      result += diagram2(nodes);
+    else if (n_rank2 == 4)
+      result += diagram3(nodes);
+    else if (n_rank2 == 0 && n_rank3 == 2)
+      result += diagram4(nodes);
+    else if (n_rank2 == 1 && n_rank3 == 2)
+      result += diagram5(nodes);
+    else if (n_rank2 == 2 && n_rank3 == 2) {
+      // There are two possibilities here. Try one and if it doesn't work,
+      // it'll be the other...
+      try {
+        result += diagram6(nodes);
+      } catch (invalid_argument& e) {
+        result += diagram7(nodes);
+      }
+    }
+    else if (n_rank3 == 4)
+      result += diagram8(nodes);
+
+
+  }
+  return result;
+}
+
+
+
+/* ===============================================================
+ *
+ * Diagram implementations
+ *
+ * =============================================================== */
+
 cdouble diagram0(vector<DiagramNode>& nodes) {
   return contract(*nodes[0].t,{{0,1}});
 }
