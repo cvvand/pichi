@@ -3,6 +3,7 @@
 #define PICHI_DIAGRAMS_H
 
 #include "contraction.h"
+#include "graph.h"
 
 namespace pichi {
 
@@ -55,6 +56,15 @@ namespace pichi {
  *
  * ***********************************************************************/
 
+/*
+ * Extract a part of a graph, such that if the extracted part was evaluated
+ * it would reduce the diagram into another, lower level diagram. An example
+ * could be evaluating one of the contractions in diagram 3 in order to end
+ * up in diagram 2.
+ * The input graph is not modified. The suggested extracted subgraph is
+ * returned.
+ */
+Graph extract(const Graph& graph, int diagram);
 
 /*
  * Computes a diagrammatic contraction expression. Takes as input a

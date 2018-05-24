@@ -5,6 +5,13 @@
 #include <vector>
 #include <string>
 
+
+/* *************************************************************************
+ *
+ * This file names some utility functions needed for manipulation of strings
+ *
+ ************************************************************************ */
+
 namespace pichi {
 
 /*

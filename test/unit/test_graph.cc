@@ -27,7 +27,7 @@ TEST(Graph, CreateGraphWithTwoNodes) {
 
 }
 
-TEST(Graph, ConnectOneNode) {
+TEST(Graph, OneConnectedNode) {
 
   Graph g("3aa");
 
@@ -42,7 +42,7 @@ TEST(Graph, ConnectOneNode) {
 
 }
 
-TEST(Graph, ConnectTwoNodes) {
+TEST(Graph, TwoConnectedNodes) {
 
   Graph g("3ab12ba");
 
@@ -90,6 +90,70 @@ TEST(Graph, OpenNode) {
 
 }
 
+TEST(Graph, AddNodeWithTwoOpenConnections) {
+  Graph g("0ab1bc");
+  g.addNode(4, 2);
+  ASSERT_EQ(3, g.getNodes().size());
+  ASSERT_EQ(4, g.getNodes()[2]);
+  vector<pair<int,int>> c = g.connections(4);
+  ASSERT_EQ(2, c.size());
+  EXPECT_EQ(make_pair(-1,-1), c[0]);
+  EXPECT_EQ(make_pair(-1,-1), c[1]);
+}
+
+TEST(Graph, RemoveNodeWithTwoOpenConnections) {
+  Graph g("0ab1bc");
+  g.addNode(4, 2);
+  ASSERT_EQ(3, g.getNodes().size());
+  g.removeNode(4);
+  ASSERT_EQ(2, g.getNodes().size());
+  EXPECT_EQ(0, g.getNodes()[0]);
+  EXPECT_EQ(1, g.getNodes()[1]);
+}
+
+TEST(Graph, RemoveNodeWithTwoConnections) {
+  Graph g("0ab1bc2ca");
+  g.removeNode(1);
+  ASSERT_EQ(2, g.getNodes().size());
+  EXPECT_EQ(0, g.getNodes()[0]);
+  EXPECT_EQ(2, g.getNodes()[1]);
+
+  vector<pair<int,int>> c = g.connections(0);
+  EXPECT_EQ(make_pair(2,1), c[0]);
+  EXPECT_EQ(make_pair(-1,-1), c[1]);
+
+  c = g.connections(2);
+  EXPECT_EQ(make_pair(-1,-1), c[0]);
+  EXPECT_EQ(make_pair(0,0), c[1]);
+
+  EXPECT_THROW(g.connections(1), out_of_range);
+}
+
+TEST(Graph, ConnectTwoOpenNodes) {
+  Graph g("0ab1cd");
+  g.connect(0,0,1,1);
+  EXPECT_EQ(make_pair(1,1), g.connections(0)[0]);
+  EXPECT_EQ(make_pair(-1,-1), g.connections(0)[1]);
+  EXPECT_EQ(make_pair(-1,-1), g.connections(1)[0]);
+  EXPECT_EQ(make_pair(0,0), g.connections(1)[1]);
+
+}
+
+TEST(Graph, ConnectConnectedNodes) {
+  Graph g("0ab1ab2cc");
+  g.connect(2,0,0,0);
+
+  EXPECT_EQ(make_pair(2,0), g.connections(0)[0]);
+  EXPECT_EQ(make_pair(1,1), g.connections(0)[1]);
+
+  EXPECT_EQ(make_pair(-1,-1), g.connections(1)[0]);
+  EXPECT_EQ(make_pair(0,1), g.connections(1)[1]);
+
+  EXPECT_EQ(make_pair(0,0), g.connections(2)[0]);
+  EXPECT_EQ(make_pair(-1,-1), g.connections(2)[1]);
+
+}
+
 TEST(GraphContains, FailOnMissingNode) {
   Graph g1("3ab12ab");
   Graph g2("4ab");
@@ -123,6 +187,39 @@ TEST(GraphContains, ComplicatedTest) {
   EXPECT_TRUE(g1.contains(g3));
   EXPECT_FALSE(g1.contains(g4));
 }
+
+TEST(GraphCopyConstructor, CopyNodesAndConnections) {
+  Graph g("0ab1acd2bce");
+  Graph h(g);
+
+  g.addNode(3, 3);
+  g.connect(1,2,2,2);
+
+  vector<int> nodes = h.getNodes();
+  ASSERT_EQ(3, nodes.size());
+  EXPECT_EQ(0, nodes[0]);
+  EXPECT_EQ(1, nodes[1]);
+  EXPECT_EQ(2, nodes[2]);
+
+  vector<pair<int,int>> c = h.connections(0);
+  ASSERT_EQ(2, c.size());
+  EXPECT_EQ(make_pair(1,0), c[0]);
+  EXPECT_EQ(make_pair(2,0), c[1]);
+
+  c = h.connections(1);
+  ASSERT_EQ(3, c.size());
+  EXPECT_EQ(make_pair(0,0), c[0]);
+  EXPECT_EQ(make_pair(2,1), c[1]);
+  EXPECT_EQ(make_pair(-1,-1), c[2]);
+
+  c = h.connections(2);
+  ASSERT_EQ(3, c.size());
+  EXPECT_EQ(make_pair(0,1), c[0]);
+  EXPECT_EQ(make_pair(1,1), c[1]);
+  EXPECT_EQ(make_pair(-1,-1), c[2]);
+}
+
+
 
 
 

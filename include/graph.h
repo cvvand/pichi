@@ -66,9 +66,33 @@ public:
   Graph(const std::string&);
 
   /*
+   * Copy constructor.
+   * Creates a copy of the input graph.
+   */
+  Graph(const Graph&);
+
+  /*
+   * Add a named node to the graph with a given number of open connections.
+   */
+  void addNode(int name, int connections);
+
+  /*
+   * Removes a node from the graph.
+   * Any connections to this node will be made open.
+   */
+  void removeNode(int);
+
+  /*
    * Gets a list of all the nodes in the graph
    */
   std::vector<int> getNodes() const;
+
+  /*
+   * Connects two nodes of a graph using the indicated connections. If the
+   * connections are already in use, they will first be broken and made open,
+   * before being reconnected.
+   */
+  void connect(int node1, int conn1, int node2, int conn2);
 
   /*
    * Gets a list of all the connections from a given node.
