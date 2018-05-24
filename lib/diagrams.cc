@@ -2,6 +2,7 @@
 #include "diagrams.h"
 #include "contraction.h"
 #include "tensor.h"
+#include "string_utils.h"
 
 using namespace arma;
 using namespace std;
@@ -9,31 +10,6 @@ using namespace std;
 
 /* Utility functions */
 namespace {
-
-/*
- * Matches two strings:
- * Finds the subset of characters in the strings which occurs in both. The
- * result is a list of pairs of integers giving the position of the matches.
- *
- * Example:
- *    "abcd"+"aebf" -> [(0,0),(1,2)] ,
- * since "a" is in position 0 and 0, and "b" is in position 1 and 2.
- *
- * The result is empty if there are no matches.
- */
-vector<pair<int,int>> matchChars(string s1, string s2) {
-
-  vector<pair<int,int>> res;
-
-  for (int i = 0; i < s2.length(); ++i) {
-    int pos = s1.find(s2[i]);
-    if (pos != string::npos)
-      res.push_back(make_pair(pos,i));
-  }
-
-  return res;
-
-};
 
 /*
  * Combines two strings, cutting away the duplicates:
@@ -45,7 +21,7 @@ vector<pair<int,int>> matchChars(string s1, string s2) {
  * since "a" and "b" occur in both strings, and the rest is in order.
  */
 string residualString(string s1, string s2) {
-  string res = "";
+  string res;
   for (char s : s1) {
     if (s2.find(s) == string::npos)
       res += s;
@@ -61,92 +37,12 @@ string residualString(string s1, string s2) {
 
 namespace pichi {
 
-vector<string> split(string s) {
-
-  /* We first split the string into nodes:
-   * "0abc1ad2de3bce" --> "0abc", "1ad", "2de", "3bce".
-   */
-
-  queue<string> nodes;    // Container for the nodes
-  string this_node;       // The current node
-  bool digit_last = true; // Currently looking at a multi digit number?
-
-  for (char c : s) {
-    if (isdigit(c)) {
-      // c is a digit
-      if (isdigit(c) && !digit_last) {
-        // The last char was an index, so this is a new node.
-        // Save the old node and start a new one.
-        nodes.push(this_node);
-        this_node.clear();
-        digit_last = true;
-      }
-    } else {
-      // c is not a digit
-      digit_last = false;
-    }
-    // Add c to the current node
-    this_node += c;
-  }
-  if (!this_node.empty()) {
-    // Push the last node into the queue
-    nodes.push(this_node);
-  }
-
-  // Now we add connected nodes into components
-  vector<string> comps; // The connected components
-  while (!nodes.empty()) {
-
-    // Start a new component
-    string this_comp = nodes.front();
-    nodes.pop();
-
-    // Check is the remaining nodes can be added to the component
-    int count = 0;
-    while (count++ < nodes.size()) {
-
-      // Grab the next node
-      string node = nodes.front();
-      nodes.pop();
-
-      for (char c : node) {
-        // Check if any of the indices of the node matches the component
-        if (!isdigit(c) && this_comp.find(c) != string::npos) {
-
-          // The index matches. We add the node to the component
-          this_comp += node;
-
-          // We now have to check all the remaining nodes again, since we
-          // might have new indices that were not in the component before.
-          count = 0;
-          break;
-        }
-      }
-      if (count != 0) {
-        // No more nodes, so we're done.
-        nodes.push(node);
-      }
-
-    }
-
-    // Add this component to the list.
-    comps.push_back(this_comp);
-
-    // If there are remaining nodes we start a new component. Otherwise
-    // we're done.
-
-  }
-
-  return comps;
-
-}
-
 
 cdouble compute(std::string s, std::vector<Tensor>& tensors) {
   cdouble result = 0.0;
 
   // We iterate through all the connected components of the diagram
-  for (string comp : split(s)) {
+  for (string comp : splitToConnected(s)) {
 
     vector<DiagramNode> nodes; // List of nodes we need for this diagram
     int idx = 0;

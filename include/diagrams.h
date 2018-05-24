@@ -55,15 +55,6 @@ namespace pichi {
  *
  * ***********************************************************************/
 
-/*
- * Splits a contraction string into connected components. For example, the
- * string
- * "12ab77acd103cdb21ee"
- * is split into two connected parts:
- * "12ab77acd103cdb"
- * "21ee"
- */
-std::vector<std::string> split(std::string);
 
 /*
  * Computes a diagrammatic contraction expression. Takes as input a
