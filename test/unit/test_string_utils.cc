@@ -7,6 +7,11 @@ using namespace std;
 
 namespace {
 
+TEST(ResidualString, ResidualOfABCD_BDE) {
+  string s = residualString("abcd", "bde");
+  EXPECT_EQ("ace", s);
+}
+
 TEST(MatchChars, MatchABCD_BDE) {
   vector<pair<int,int>> m = matchChars("abcd","bde");
   ASSERT_EQ(2, m.size());

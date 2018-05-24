@@ -21,6 +21,18 @@ namespace pichi {
 std::vector<std::pair<int,int>> matchChars(std::string s1, std::string s2);
 
 /*
+ * Combines two strings, cutting away the duplicates:
+ * This function basically finds the symmetric difference between the two
+ * strings. The result is this difference, starting with string 1, in order.
+ *
+ * Example:
+ *    "abcd"+"aebf" -> "cdef"
+ * since "a" and "b" occur in both strings, and the rest is in order.
+ */
+std::string residualString(std::string s1, std::string s2);
+
+
+/*
  * Split a contraction string into nodes, one for each tensor. For example, the
  * string
  * "12ab77acd103cdb21ee"

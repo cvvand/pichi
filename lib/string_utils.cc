@@ -5,6 +5,20 @@ using namespace std;
 
 namespace pichi {
 
+string residualString(string s1, string s2) {
+  string res;
+  for (char s : s1) {
+    if (s2.find(s) == string::npos)
+      res += s;
+  }
+  for (char s : s2) {
+    if (s1.find(s) == string::npos)
+      res += s;
+  }
+  return res;
+}
+
+
 vector<pair<int,int>> matchChars(string s1, string s2) {
 
   vector<pair<int,int>> res;

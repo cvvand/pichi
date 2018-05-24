@@ -8,33 +8,6 @@ using namespace arma;
 using namespace std;
 
 
-/* Utility functions */
-namespace {
-
-/*
- * Combines two strings, cutting away the duplicates:
- * This function basically finds the symmetric difference between the two
- * strings. The result is this difference, starting with string 1, in order.
- *
- * Example:
- *    "abcd"+"aebf" -> "cdef"
- * since "a" and "b" occur in both strings, and the rest is in order.
- */
-string residualString(string s1, string s2) {
-  string res;
-  for (char s : s1) {
-    if (s2.find(s) == string::npos)
-      res += s;
-  }
-  for (char s : s2) {
-    if (s1.find(s) == string::npos)
-      res += s;
-  }
-  return res;
-}
-
-}
-
 namespace pichi {
 
 
