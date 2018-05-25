@@ -10,6 +10,96 @@ using namespace std;
 
 namespace pichi {
 
+Graph extract(const Graph& graph, int diagram) {
+  Graph ext(graph);
+
+  switch(diagram) {
+
+    case 2: {
+      // simply remove the first node
+      ext.removeNode(ext.getNodes()[0]);
+      break;
+    }
+
+    case 3: {
+      // Remove the first node and its first connection
+      int node1 = ext.getNodes()[0];
+      int node2 = ext.connections(node1)[0].first;
+      ext.removeNode(node1);
+      ext.removeNode(node2);
+      break;
+    }
+
+    case 5: {
+      // Remove the first node with three connections
+      for (int n : graph.getNodes()) {
+        if (graph.connections(n).size() == 3) {
+          ext.removeNode(n);
+          break;
+        }
+      }
+      break;
+    }
+
+    case 6: {
+      // Remove the nodes with three connections
+      for (int n : graph.getNodes()) {
+        if (graph.connections(n).size() == 3) {
+          ext.removeNode(n);
+        }
+      }
+      break;
+    }
+
+    case 7: {
+      // We remove the first node
+      int node1 = graph.getNodes()[0];
+      ext.removeNode(node1);
+      // If the first node has two connections, remove the first connected node
+      if (graph.connections(node1).size() == 2) {
+        ext.removeNode(graph.connections(node1)[0].first);
+      }
+        // If the first node has three connections, we remove the first connected
+        // node with two connections
+      else {
+        for (pair<int, int> p : graph.connections(node1)) {
+          if (graph.connections(p.first).size() == 2) {
+            ext.removeNode(p.first);
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    case 8: {
+      // Remove the first node and the node connected to it with two connections
+      int node1 = graph.getNodes()[0];
+      ext.removeNode(node1);
+      int nodex, nodey;
+      int cx = 0;
+      nodex = graph.connections(node1)[0].first;
+      for (pair<int, int> p : graph.connections(node1)) {
+        if (p.first == nodex)
+          cx++;
+        else {
+          nodey = p.first;
+        }
+      }
+      if (cx == 2)
+        ext.removeNode(nodex);
+      else {
+        ext.removeNode(nodey);
+      }
+      break;
+    }
+
+    default:{} // Do nothing
+
+  }
+
+  return ext;
+}
 
 cdouble compute(std::string s, std::vector<Tensor>& tensors) {
   cdouble result = 0.0;
