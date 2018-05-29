@@ -11,20 +11,17 @@ using namespace std;
 namespace {
 
 
-TEST(TensorDefault, DefaultDimension2x2) {
+TEST(TensorDefault, DefaultScalar) {
   Tensor t;
-  ASSERT_EQ(t.getRank(), 2);
-  EXPECT_EQ(t.getSize(), 2);
+  ASSERT_EQ(t.getRank(), 0);
+  EXPECT_EQ(t.getSize(), 1);
 }
 
 TEST(TensorDefault, DefaultInitialData) {
   Tensor t;
-  cdouble data[4];
-  t.getSlice({-1,-1}, data);
+  cdouble data[1];
+  t.getSlice({0}, data);
   EXPECT_EQ(data[0] , 0.0);
-  EXPECT_EQ(data[1] , 0.0);
-  EXPECT_EQ(data[2] , 0.0);
-  EXPECT_EQ(data[3] , 0.0);
 }
 
 TEST(TensorConstructor, DimensionsOfTensor) {
@@ -114,6 +111,10 @@ TEST(TensorMoveConstructor, Move2DModifiedTensor) {
   EXPECT_EQ(0.6, data2[3]);
 
   ASSERT_EQ(0, t.getRank());
+  EXPECT_EQ(1, t.getSize());
+  cdouble data3[1];
+  t.getSlice({0},data3);
+  EXPECT_EQ(0.0, data3[0]);
 }
 
 TEST(TensorMoveConstructor, Move3DModifiedTensor) {
@@ -142,6 +143,10 @@ TEST(TensorMoveConstructor, Move3DModifiedTensor) {
   EXPECT_EQ(3.4, data2[3]);
 
   ASSERT_EQ(0, t.getRank());
+  EXPECT_EQ(1, t.getSize());
+  cdouble data3[1];
+  t.getSlice({0},data3);
+  EXPECT_EQ(0.0, data3[0]);
 
 }
 
@@ -166,6 +171,10 @@ TEST(TensorMoveAssignment, MoveAssign2DModifiedTensor) {
   EXPECT_EQ(0.6, data2[3]);
 
   ASSERT_EQ(0, t.getRank());
+  EXPECT_EQ(1, t.getSize());
+  cdouble data3[1];
+  t.getSlice({0},data3);
+  EXPECT_EQ(0.0, data3[0]);
 
 }
 
@@ -196,6 +205,10 @@ TEST(TensorMoveAssignment, MoveAssign3DModifiedTensor) {
   EXPECT_EQ(3.4, data2[3]);
 
   ASSERT_EQ(0, t.getRank());
+  EXPECT_EQ(1, t.getSize());
+  cdouble data3[1];
+  t.getSlice({0},data3);
+  EXPECT_EQ(0.0, data3[0]);
 
 }
 
@@ -258,7 +271,7 @@ TEST(TensorCopyAssignment, CopyAssign3DModifiedData) {
   data[6] = 1.4; data[7] = 3.4;
   t.setSlice({-1,-1,0},data);
   t.setSlice({-1,-1,1},data+4);
-  Tensor t2(2,7);
+  Tensor t2;
   t2 = t;
 
   ASSERT_EQ(3, t2.getRank());

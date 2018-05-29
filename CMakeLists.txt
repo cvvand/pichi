@@ -25,6 +25,7 @@ endif()
 # --- PICHI --------------------------------------------------------
 
 include_directories(include)
+include_directories(include/laph)
 add_subdirectory(lib)
 
 

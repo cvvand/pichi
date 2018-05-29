@@ -15,10 +15,10 @@ namespace pichi {
 
 void Tensor::init(int rank, int size) {
 
-  if (rank < 2) {
-    throw invalid_argument("Tensor rank must be at least 2");
+  if (rank == 1) {
+    throw invalid_argument("Rank 1 tensors are not allowed");
   }
-  if (size < 2) {
+  if (rank != 0 && size < 2) {
     throw invalid_argument("Tensor size must be at least 2");
   }
 
@@ -40,11 +40,11 @@ void Tensor::init(int rank, int size) {
  * Default constructor implementation
  * Creates a 2x2 tensor and initialises everything to 0.
  */
-Tensor::Tensor() : data(new cdouble[4]) {
+Tensor::Tensor() {
 
-  init(2,2);
+  init(0,1);
 
-  storage = {0,1};
+  storage = {};
 
 }
 
@@ -114,11 +114,8 @@ Tensor::Tensor(Tensor&& other) noexcept {
   // Copy storage data
   storage = other.storage;
 
-  // Set the dimension vector of the input to be empty.
-  other.dim = 0;
-  // Make the input data pointer point to NULL. This is safe, since we
-  // already got the pointer to the actual data.
-  other.data = nullptr;
+  // Re-initialise the input tensor as a default scalar
+  other.init(0,1);
 }
 
 /*
@@ -142,10 +139,8 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
   delete[] data;
   data = other.data;
 
-  // Clear the input dimension vector and data pointer. This is safe since we
-  // already grabbed the pointer to the actual data.
-  other.dim = 0;
-  other.data = nullptr;
+  // Re-init the input tensor as a default scalar
+  other.init(0,1);
 
   return *this;
 }
@@ -190,6 +185,12 @@ void Tensor::setElement(const std::vector<int>& index, cdouble value) {
 }
 
 void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
+
+  // For rank 0 tensors, just return the element, we don't check the slice
+  if (dim == 0) {
+    buff[0] = data[0];
+    return;
+  }
 
   // Check slice
   if (slice.size() != dim)
@@ -267,6 +268,12 @@ void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 }
 
 void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
+
+  // For rank 0 tensors, simply copy the element and don't worry about the slice
+  if (dim == 0) {
+    data[0] = buff[0];
+    return;
+  }
 
   // Check slice
   if (slice.size() != dim)

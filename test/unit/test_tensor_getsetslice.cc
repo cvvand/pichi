@@ -12,6 +12,15 @@ using namespace std;
 
 namespace {
 
+TEST(TensorGetSetSlice, SetScalarValue) {
+  Tensor t;
+  cdouble data[1] = {2.5};
+  t.setSlice({0},data);
+  cdouble data2[1];
+  t.getSlice({0}, data2);
+  EXPECT_EQ(2.5, data2[0]);
+}
+
 TEST(TensorGetSetSlice, OverlappingSlicesAreCompatible) {
   Tensor t(3, 2);
   cdouble data[4];

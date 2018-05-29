@@ -13,18 +13,7 @@ namespace {
 TEST(TensorStorage, DefaultTensorStoredAlong0_1) {
   Tensor t;
   vector<int> s = t.getStorage();
-  ASSERT_EQ(2, s.size());
-  EXPECT_EQ(0, s[0]);
-  EXPECT_EQ(1, s[1]);
-}
-
-TEST(TensorStorage, ChangeStorageTo1_0) {
-  Tensor t;
-  t.setStorage({1,0});
-  vector<int> s = t.getStorage();
-  ASSERT_EQ(2, s.size());
-  EXPECT_EQ(1, s[0]);
-  EXPECT_EQ(0, s[1]);
+  ASSERT_EQ(0, s.size());
 }
 
 TEST(TensorStorage, CreateTensorWithSpecificStorage) {

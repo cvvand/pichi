@@ -18,8 +18,9 @@ namespace pichi {
  * dimension of any given tensor is the same.
  * As an example, a square matrix of size N x N is a tensor of rank 2 and
  * size N.
- * This tensor class does not support tensors of rank 1 (vectors) or 0
- * (scalars). The minimum rank is 2.
+ * This tensor class does not support tensors of rank 1 (vectors). Scalars
+ * are implemented for convenience as rank 0 tensors. For rank 0 tensors, the
+ * size of the tensor is irrelevant.
  *
  * We interact with tensors in "slices". A slice is a 2-dimensional
  * piece of the tensor, which we can access and modify. This allows us to
@@ -56,7 +57,7 @@ public:
 
   /*
    * Default constructor
-   * Creates a 2x2 tensor with all elements set to 0. Uses default storage.
+   * Creates a rank 0 tensor (scalar) with value 0.
    */
   Tensor();
 
