@@ -108,13 +108,13 @@ void setStorage(Tensor& tensor, const std::vector<int> slicing) {
 cdouble contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
 
   // Check that we have the correct number of contracted indices
-  if (idx.size()*2 != tensor.rank())
+  if (idx.size()*2 != tensor.getRank())
     throw invalid_argument("Incompatible number of contracted indices");
   // Check that no index appears twice and that they are valid indices
   unordered_set<int> seen;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= tensor.rank() ||
-        p.second < 0 || p.second >= tensor.rank())
+    if (p.first < 0 || p.first >= tensor.getRank() ||
+        p.second < 0 || p.second >= tensor.getRank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen.insert(p.first).second && seen.insert(p.second).second))
@@ -123,19 +123,19 @@ cdouble contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
   }
 
   // Set up slice iterator
-  SingleSliceIterator it(tensor.rank(), tensor.size(), idx);
+  SingleSliceIterator it(tensor.getRank(), tensor.getSize(), idx);
 
   // Set storage
   setStorage(tensor, it.getSlice1());
 
-  cdouble data[tensor.size()*tensor.size()];
+  cdouble data[tensor.getSize()*tensor.getSize()];
   cdouble res = 0.0;
 
 
   do {
 
     tensor.getSlice(it.getSlice1(), data);
-    res += trace(cx_mat(data, tensor.size(), tensor.size()));
+    res += trace(cx_mat(data, tensor.getSize(), tensor.getSize()));
 
   } while (it.nextContracted());
 
@@ -145,19 +145,19 @@ cdouble contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
 cdouble contract(Tensor& t1, Tensor& t2,
                  const std::vector<std::pair<int, int>>& idx) {
 
-  if (t1.rank() != t2.rank())
+  if (t1.getRank() != t2.getRank())
     throw invalid_argument("Tensors do not have equal rank");
 
   // Check that we have the correct number of contracted indices
-  if (idx.size() != t1.rank())
+  if (idx.size() != t1.getRank())
     throw invalid_argument("Incompatible number of contracted indices");
 
   // Check that we all indices are contracted and that they are valid indices
   unordered_set<int> seen1;
   unordered_set<int> seen2;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1.rank() ||
-        p.second < 0 || p.second >= t2.rank())
+    if (p.first < 0 || p.first >= t1.getRank() ||
+        p.second < 0 || p.second >= t2.getRank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
@@ -166,7 +166,7 @@ cdouble contract(Tensor& t1, Tensor& t2,
   }
 
   // Set up the iterator
-  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
+  DoubleSliceIterator it(t1.getRank(), t2.getRank(), t1.getSize(), idx);
 
   // Make sure tensor data is stored appropriately in the input tensors
   setStorage(t1, it.getSlice1());
@@ -177,8 +177,8 @@ cdouble contract(Tensor& t1, Tensor& t2,
   int transpose_type = detectTranspose(it.getSlice1(),it.getSlice2());
 
   // Containers for the data for matrix multiplication
-  cdouble data1[t1.size()*t1.size()];
-  cdouble data2[t2.size()*t2.size()];
+  cdouble data1[t1.getSize()*t1.getSize()];
+  cdouble data2[t2.getSize()*t2.getSize()];
 
   cdouble result = 0.0;
 
@@ -188,8 +188,8 @@ cdouble contract(Tensor& t1, Tensor& t2,
     // Get the current slice in matrix form
     t1.getSlice(it.getSlice1(), data1);
     t2.getSlice(it.getSlice2(), data2);
-    cx_mat m1(data1, t1.size(), t1.size());
-    cx_mat m2(data2, t2.size(), t2.size());
+    cx_mat m1(data1, t1.getSize(), t1.getSize());
+    cx_mat m2(data2, t2.getSize(), t2.getSize());
 
     if (transpose_type == 0 || transpose_type == 3) {
       // The two types are degenerate from this property of the trace:
@@ -224,21 +224,21 @@ void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
     throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
-  int free_out = t1.rank() - 2*idx.size();
+  int free_out = t1.getRank() - 2*idx.size();
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
 
   // Check that the output matches
-  if (tout.rank() != free_out)
+  if (tout.getRank() != free_out)
     throw invalid_argument("Output tensor has wrong rank");
-  if (tout.size() != t1.size())
+  if (tout.getSize() != t1.getSize())
     throw invalid_argument("Tensor sizes must be equal");
 
   // Check that we have no repeated indices
   unordered_set<int> seen;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1.rank() ||
-        p.second < 0 || p.second >= t1.rank())
+    if (p.first < 0 || p.first >= t1.getRank() ||
+        p.second < 0 || p.second >= t1.getRank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen.insert(p.first).second && seen.insert(p.second).second))
@@ -247,7 +247,7 @@ void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
   }
 
   // Set up the iterator
-  SingleSliceIterator it(t1.rank(), t1.size(), idx);
+  SingleSliceIterator it(t1.getRank(), t1.getSize(), idx);
 
   // Set storage for input tensor
   setStorage(t1, it.getSlice1());
@@ -265,8 +265,8 @@ void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
   tout.setStorage(storage_out);
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1.size() * t1.size()];
-  cdouble data_out[tout.size() * tout.size()];
+  cdouble data1[t1.getSize() * t1.getSize()];
+  cdouble data_out[tout.getSize() * tout.getSize()];
 
   do { // Loop over non-sliced free indices on the output tensor
 
@@ -282,7 +282,7 @@ void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
         // Get the current slices in matrix form
         t1.getSlice(it.getSlice1(), data1);
 
-        data_out[x] += trace(cx_mat(data1, t1.size(), t1.size()));
+        data_out[x] += trace(cx_mat(data1, t1.getSize(), t1.getSize()));
 
         // Increase the contracted non-sliced indices on input tensors
       } while (it.nextContracted());
@@ -327,22 +327,22 @@ void contract(Tensor& t1, Tensor& t2,
     throw invalid_argument("List of contracted indices is empty");
 
   // Get the number of free indices
-  int free_out = t1.rank() + t2.rank() - 2*idx.size();
+  int free_out = t1.getRank() + t2.getRank() - 2*idx.size();
   if (free_out <= 1)
     throw invalid_argument("Too many contracted indices");
 
   // Check that the output matches
-  if (tout.rank() != free_out)
+  if (tout.getRank() != free_out)
     throw invalid_argument("Output tensor has wrong rank");
-  if (tout.size() != t1.size() || tout.size() != t2.size())
+  if (tout.getSize() != t1.getSize() || tout.getSize() != t2.getSize())
     throw invalid_argument("Tensor sizes must be equal");
 
   // Check that we have no repeated indices
   unordered_set<int> seen1;
   unordered_set<int> seen2;
   for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1.rank() ||
-        p.second < 0 || p.second >= t2.rank())
+    if (p.first < 0 || p.first >= t1.getRank() ||
+        p.second < 0 || p.second >= t2.getRank())
       throw invalid_argument("Indices must be between 0 and R-1, where R is "
                              "the tensor rank");
     if (!(seen1.insert(p.first).second && seen2.insert(p.second).second))
@@ -351,7 +351,7 @@ void contract(Tensor& t1, Tensor& t2,
   }
 
   // Set up the iterator
-  DoubleSliceIterator it(t1.rank(), t2.rank(), t1.size(), idx);
+  DoubleSliceIterator it(t1.getRank(), t2.getRank(), t1.getSize(), idx);
 
   // Make sure tensor data is stored appropriately in the input tensors
   setStorage(t1, it.getSlice1());
@@ -374,9 +374,9 @@ void contract(Tensor& t1, Tensor& t2,
   int transpose_type = detectTranspose(it.getSlice1(), it.getSlice2());
 
   // Make ready arrays for matrix multiplication
-  cdouble data1[t1.size() * t1.size()];
-  cdouble data2[t2.size() * t2.size()];
-  cdouble data_out[tout.size() * tout.size()];
+  cdouble data1[t1.getSize() * t1.getSize()];
+  cdouble data2[t2.getSize() * t2.getSize()];
+  cdouble data_out[tout.getSize() * tout.getSize()];
 
   do { // Loop through free indices, not sliced on the output tensor
 
@@ -395,8 +395,8 @@ void contract(Tensor& t1, Tensor& t2,
           // Get the current slices in matrix form
           t1.getSlice(it.getSlice1(), data1);
           t2.getSlice(it.getSlice2(), data2);
-          cx_mat m1(data1, t1.size(), t1.size());
-          cx_mat m2(data2, t2.size(), t2.size());
+          cx_mat m1(data1, t1.getSize(), t1.getSize());
+          cx_mat m2(data2, t2.getSize(), t2.getSize());
 
           // Some types are degenerate, see comments in
           // contract(char,char,vector)
@@ -423,8 +423,8 @@ void contract(Tensor& t1, Tensor& t2,
       // Get the current slices in matrix form
       t1.getSlice(it.getSlice1(), data1);
       t2.getSlice(it.getSlice2(), data2);
-      cx_mat m1(data1, t1.size(), t1.size());
-      cx_mat m2(data2, t2.size(), t2.size());
+      cx_mat m1(data1, t1.getSize(), t1.getSize());
+      cx_mat m2(data2, t2.getSize(), t2.getSize());
 
       cx_mat mout; // The output slice in matrix form.
       // Do the multiplication based on transpose type

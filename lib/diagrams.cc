@@ -129,7 +129,7 @@ cdouble compute(std::string s, std::vector<Tensor>& tensors) {
       DiagramNode node;
       node.idx = pattern;
       node.t = &tensors[tensor_idx];
-      if (node.t->rank() == 2)
+      if (node.t->getRank() == 2)
         n_rank2++;
       else
         n_rank3++;
@@ -195,7 +195,7 @@ cdouble diagram2(vector<DiagramNode>& nodes) {
   Tensor* t2 = nodes[1].t; string idx2 = nodes[1].idx;
   Tensor* t3 = nodes[2].t; string idx3 = nodes[2].idx;
 
-  Tensor t4(2,t1->size());
+  Tensor t4(2,t1->getSize());
   contract(*t1, *t2, matchChars(idx1,idx2),t4);
   string idx4 = residualString(idx1,idx2);
 
@@ -234,7 +234,7 @@ cdouble diagram3(vector<DiagramNode>& nodes) {
   }
 
   // Create a temporary tensor for the contraction.
-  Tensor* t5 = new Tensor(2, x1->size());
+  Tensor* t5 = new Tensor(2, x1->getSize());
   contract(*x1, *x2, matchChars(xidx1, xidx2), *t5);
   string idx5 = residualString(xidx1, xidx2);
 
@@ -273,7 +273,7 @@ cdouble diagram5(vector<DiagramNode>& nodes) {
   for (DiagramNode dn : nodes) {
     // We need to find the rank 2 tensor and a rank 3 tensor and contract
     // them. The last one is passed on to diagram4
-    if (dn.t->rank() == 2) {
+    if (dn.t->getRank() == 2) {
       // Found the rank 2 tensor!
       x1 = dn.t;
       xidx1 = dn.idx;
@@ -291,7 +291,7 @@ cdouble diagram5(vector<DiagramNode>& nodes) {
   }
 
   // Create a temporary tensor and contract.
-  Tensor *t4 = new Tensor(3, x1->size());
+  Tensor *t4 = new Tensor(3, x1->getSize());
   contract(*x1, *x2, matchChars(xidx1,xidx2), *t4);
   string idx4 = residualString(xidx1,xidx2);
 
@@ -321,7 +321,7 @@ cdouble diagram6(vector<DiagramNode>& nodes) {
   for (DiagramNode dn : nodes) {
     // We look for the two rank 2 tensors to contract here. Rank 3 tensors
     // are passed on to diagram5
-    if (dn.t->rank() == 2) {
+    if (dn.t->getRank() == 2) {
       if (found_one) {
         // The second rank 2 tensor.
         x2 = dn.t;
@@ -340,7 +340,7 @@ cdouble diagram6(vector<DiagramNode>& nodes) {
   }
 
   // Contract the two rank 2 tensors.
-  Tensor* t5 = new Tensor(2,x1->size());
+  Tensor* t5 = new Tensor(2,x1->getSize());
   contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
   string idx5 = residualString(xidx1,xidx2);
 
@@ -370,7 +370,7 @@ cdouble diagram7(vector<DiagramNode>& nodes) {
   bool found_rank3 = false;
   for (DiagramNode dn : nodes) {
     // Find a rank 2 and a rank 3 tensor, and pass the rest on
-    if (dn.t->rank() == 2) {
+    if (dn.t->getRank() == 2) {
       if (found_rank2) {
         nodes2.push_back(dn);
       }
@@ -393,7 +393,7 @@ cdouble diagram7(vector<DiagramNode>& nodes) {
   }
 
   // Contract the two tensors
-  Tensor* t5 = new Tensor(3, x1->size());
+  Tensor* t5 = new Tensor(3, x1->getSize());
   contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
   string idx5 = residualString(xidx1,xidx2);
 
@@ -431,7 +431,7 @@ cdouble diagram8(vector<DiagramNode>& nodes) {
   }
 
   // Contract the two tensors
-  Tensor* t5 = new Tensor(2, x->size());
+  Tensor* t5 = new Tensor(2, x->getSize());
   contract(*nodes[0].t, *x, matchChars(nodes[0].idx, xidx), *t5);
   string idx5 = residualString(nodes[0].idx, xidx);
 

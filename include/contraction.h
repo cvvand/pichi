@@ -13,7 +13,7 @@ namespace pichi {
  *
  * A contraction is a unary or binary tensor operation, in which one or more
  * indices on the input tensors are contracted in order to create a single
- * output tensor which has fewer combined indices or a number (no indices). An
+ * output tensor which has fewer combined indices or a number (no indices). A
  * simple example is matrix-matrix multiplication, which is the contraction
  * of a single index on two rank two tensors, creating a new rank two tensor.
  * Another example is the trace operation, which is a unary operation on a

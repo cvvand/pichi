@@ -29,8 +29,8 @@ TEST(TensorStorage, ChangeStorageTo1_0) {
 
 TEST(TensorStorage, CreateTensorWithSpecificStorage) {
   Tensor t(3,64,{2,0,1});
-  EXPECT_EQ(3, t.rank());
-  EXPECT_EQ(64, t.size());
+  EXPECT_EQ(3, t.getRank());
+  EXPECT_EQ(64, t.getSize());
   vector<int> s = t.getStorage();
   ASSERT_EQ(3, s.size());
   EXPECT_EQ(2, s[0]);
@@ -40,8 +40,8 @@ TEST(TensorStorage, CreateTensorWithSpecificStorage) {
 
 TEST(TensorStorage, CreateTensorWithDefaultStorage) {
   Tensor t(3,64);
-  EXPECT_EQ(3, t.rank());
-  EXPECT_EQ(64, t.size());
+  EXPECT_EQ(3, t.getRank());
+  EXPECT_EQ(64, t.getSize());
   vector<int> s = t.getStorage();
   ASSERT_EQ(3, s.size());
   EXPECT_EQ(0, s[0]);

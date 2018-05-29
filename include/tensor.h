@@ -179,12 +179,12 @@ public:
   /*
    * Gets the rank of the tensor.
    */
-  int rank() const { return dim; };
+  int getRank() const { return dim; };
 
   /*
    * Gets the size of the tensor (length of each dimension)
    */
-  int size() const { return n; };
+  int getSize() const { return n; };
 
 private: // --------------------------------------------------------------
 

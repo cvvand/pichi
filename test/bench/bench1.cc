@@ -30,7 +30,7 @@ cdouble rc() {
 }
 
 void fill2(Tensor& t) {
-  int s = t.size();
+  int s = t.getSize();
   cdouble slice[s*s];
   for (int i = 0; i < s*s; ++i)
     slice[i] = rc();
@@ -38,7 +38,7 @@ void fill2(Tensor& t) {
 }
 
 void fill3(Tensor& t) {
-  int s = t.size();
+  int s = t.getSize();
   cdouble slice[s*s];
   for (int j = 0; j < s; ++j) {
     for (int i = 0; i < s * s; ++i)
