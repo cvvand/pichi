@@ -46,13 +46,13 @@ endif()
 # --- Tests ----------------------------------------------------------------
 
 add_executable(all_ut
-        test_compute.cc
+        #test_compute.cc
         test_contract.cc
         test_contract_errors.cc
         test_contraction_storage_rules.cc
-        test_diagrams.cc
+        #test_diagrams.cc
         test_double_slice_iterator.cc
-        test_extract.cc
+        #test_extract.cc
         test_graph.cc
         test_single_slice_iterator.cc
         test_string_utils.cc

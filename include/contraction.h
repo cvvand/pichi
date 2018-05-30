@@ -43,37 +43,18 @@ namespace pichi {
  * ***********************************************************************/
 
 /*
- * Contracts all indices on a single tensor, resulting in a number. For a
- * rank 2 tensor, this is just the trace.
+ * Contracts indices on a single tensor, resulting in a new tensor. If all
+ * indices are contracted, the output is a rank 0 tensor.
  */
-cdouble contract(Tensor& tensor,
-                 const std::vector<std::pair<int, int>>& idx);
+Tensor contract(Tensor& tensor,
+                const std::vector<std::pair<int, int>>& idx);
+
 
 /*
- * Contract all indices on two tensors of equal rank. The resulting number
- * is returned in the end.
- * The input list of contracted indices must be the same length as the
- * tensor ranks. Returns the result.
+ * Contract indices on two tensors. The resulting tensor is returned.
  */
-cdouble contract(Tensor& tensor1, Tensor& tensor2,
-                 const std::vector<std::pair<int, int>>& idx);
-
-/*
- * Contract a number of indices on a tensor. The resulting tensor data will
- * be inserted in tensor_out, which must have the correct rank and size
- * before the call.
- */
-void contract(Tensor& tensor1, const std::vector<std::pair<int, int>>& idx,
-              Tensor& tensor_out);
-
-/*
- * Contract a number of indices on two tensors. The resulting tensor data will
- * be inserted in tensor_out, which must have the correct rank and size
- * before the call.
- */
-void contract(Tensor& tensor1, Tensor& tensor2,
-              const std::vector<std::pair<int, int>>& idx,
-              Tensor& tensor_out);
+Tensor contract(Tensor& tensor1, Tensor& tensor2,
+                const std::vector<std::pair<int, int>>& idx);
 
 
 }

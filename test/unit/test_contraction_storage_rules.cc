@@ -22,8 +22,7 @@ TEST(ContractionStorageRules, TwoTensorSingleIndexWithTensorOutput) {
   EXPECT_EQ(0, t2.getStorage()[0]);
   EXPECT_EQ(1, t2.getStorage()[1]);
 
-  Tensor t3(3,2);
-  contract(t1,t2,{{2,0}},t3);
+  Tensor t3 = contract(t1,t2,{{2,0}});
 
   EXPECT_EQ(0, t1.getStorage()[0]);
   EXPECT_EQ(2, t1.getStorage()[1]);
@@ -74,8 +73,7 @@ TEST(ContractionStorageRules, OneTensorWithTensorOutput) {
   EXPECT_EQ(3, t1.getStorage()[3]);
   EXPECT_EQ(4, t1.getStorage()[4]);
 
-  Tensor t2(3,2);
-  contract(t1,{{0,2}},t2);
+  Tensor t2 = contract(t1,{{0,2}});
 
   EXPECT_EQ(0, t1.getStorage()[0]);
   EXPECT_EQ(2, t1.getStorage()[1]);
