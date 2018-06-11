@@ -204,8 +204,6 @@ cdouble diagram7(std::vector<DiagramNode>& nodes);
  */
 cdouble diagram8(std::vector<DiagramNode>& nodes);
 
-
-
 }
 
 
