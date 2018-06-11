@@ -1,14 +1,67 @@
-#include <armadillo>
 #include "diagrams.h"
-#include "contraction.h"
-#include "tensor.h"
-#include "string_utils.h"
+#include "graph.h"
 
-using namespace arma;
 using namespace std;
 
 
 namespace pichi {
+
+
+
+int identifyDiagram(const Graph& graph) {
+  // Count the node degrees
+  int nodes2 = 0;
+  int nodes3 = 0;
+  for (int node : graph.getNodes()) {
+    if (graph.connections(node).size() == 2)
+      ++nodes2;
+    else
+      ++nodes3;
+  }
+  // We find the correct diagram from the node count.
+  if (nodes2 == 1 && nodes3 == 0)
+    return 0;
+  if (nodes2 == 2 && nodes3 == 0)
+    return 1;
+  if (nodes2 == 3)
+    return 2;
+  if (nodes2 == 4)
+    return 3;
+  if (nodes2 == 0 && nodes3 == 2)
+    return 4;
+  if (nodes2 == 1 && nodes3 == 2)
+    return 5;
+  if (nodes2 == 2 && nodes3 == 2) {
+    // This can be both diagram 6 and 7
+    // We start by getting the first node in the graph
+    vector<pair<int,int>> c0 = graph.connections(graph.getNodes()[0]);
+    if (c0.size() == 2) {
+      // The first node has two connections. If one of them is to another
+      // node with two connections, its a diagram 6. Otherwise it's 7.
+      if (graph.connections(c0[0].first).size() == 2)
+        return 6;
+      if (graph.connections(c0[1].first).size() == 2)
+        return 6;
+      return 7;
+    }
+    else {
+      // Thge first node has three connections. We count the number of
+      // connections to the other node with three connections. If it's 2 the
+      // diagram is number 6, if it's 1 the diagram is nunber 7.
+      int c3 = 0;
+      if (graph.connections(c0[0].first).size() == 3)
+        ++c3;
+      if (graph.connections(c0[1].first).size() == 3)
+        ++c3;
+      if (graph.connections(c0[2].first).size() == 3)
+        ++c3;
+      if (c3 == 2)
+        return 6;
+      return 7;
+    }
+  }
+  return 8;
+}
 
 Graph extract(const Graph& graph, int diagram) {
   Graph ext(graph);
@@ -100,354 +153,6 @@ Graph extract(const Graph& graph, int diagram) {
 
   return ext;
 }
-
-cdouble compute(std::string s, std::vector<Tensor>& tensors) {
-  cdouble result = 0.0;
-
-  // We iterate through all the connected components of the diagram
-  for (string comp : splitToConnected(s)) {
-
-    vector<DiagramNode> nodes; // List of nodes we need for this diagram
-    int idx = 0;
-    // We keep count of the number of rank 2 and rank 3 tensors
-    int n_rank2 = 0;
-    int n_rank3 = 0;
-    while (idx < comp.size()) {
-
-      // Get the tensor index
-      string tensor = "";
-      while (isdigit(comp[idx]))
-        tensor += comp[idx++];
-      int tensor_idx = stoi(tensor);
-
-      // Get the contraction string
-      string pattern = "";
-      while (!isdigit(comp[idx]) && idx < comp.size())
-        pattern += comp[idx++];
-
-      // Create the node
-      DiagramNode node;
-      node.idx = pattern;
-      node.t = &tensors[tensor_idx];
-      if (node.t->getRank() == 2)
-        n_rank2++;
-      else
-        n_rank3++;
-      nodes.push_back(node);
-
-    }
-
-    // Choose the correct diagram based on the ranks of the tensors
-    if (n_rank2 == 1 && n_rank3 == 0)
-      result += diagram0(nodes);
-    else if (n_rank2 == 2 && n_rank3 == 0)
-      result += diagram1(nodes);
-    else if (n_rank2 == 3)
-      result += diagram2(nodes);
-    else if (n_rank2 == 4)
-      result += diagram3(nodes);
-    else if (n_rank2 == 0 && n_rank3 == 2)
-      result += diagram4(nodes);
-    else if (n_rank2 == 1 && n_rank3 == 2)
-      result += diagram5(nodes);
-    else if (n_rank2 == 2 && n_rank3 == 2) {
-      // There are two possibilities here. Try one and if it doesn't work,
-      // it'll be the other...
-      try {
-        result += diagram6(nodes);
-      } catch (invalid_argument& e) {
-        result += diagram7(nodes);
-      }
-    }
-    else if (n_rank3 == 4)
-      result += diagram8(nodes);
-
-
-  }
-  return result;
-}
-
-
-
-/* ===============================================================
- *
- * Diagram implementations
- *
- * =============================================================== */
-
-cdouble diagram0(vector<DiagramNode>& nodes) {
-  return contract(*nodes[0].t,{{0,1}});
-}
-
-cdouble diagram1(vector<DiagramNode>& nodes) {
-
-  return contract(*nodes[0].t,*nodes[1].t,
-                  matchChars(nodes[0].idx,nodes[1].idx));
-
-}
-
-cdouble diagram2(vector<DiagramNode>& nodes) {
-
-  // Contraction order is irrelevant for this diagram: all choices of two
-  // nodes will be equivalent
-
-  Tensor* t1 = nodes[0].t; string idx1 = nodes[0].idx;
-  Tensor* t2 = nodes[1].t; string idx2 = nodes[1].idx;
-  Tensor* t3 = nodes[2].t; string idx3 = nodes[2].idx;
-
-  Tensor t4(2,t1->getSize());
-  contract(*t1, *t2, matchChars(idx1,idx2),t4);
-  string idx4 = residualString(idx1,idx2);
-
-  return contract(t4, *t3, matchChars(idx4,idx3));
-
-}
-
-cdouble diagram3(vector<DiagramNode>& nodes) {
-
-  // Strategy: Contract two nodes and handle the rest as a diagram2
-
-  vector<DiagramNode> nodes2; // The nodes we will send to diagram2
-
-  Tensor* x1; string xidx1;
-  Tensor* x2; string xidx2;
-
-  for (DiagramNode dn : nodes) {
-    // We need to find two connected nodes and contract them. The rest is
-    // passed on to diagram2
-    if (xidx1.empty()) {
-      // We always grab the first node
-      x1 = dn.t;
-      xidx1 = dn.idx;
-    }
-    else if (xidx2.empty() && !matchChars(xidx1, dn.idx).empty()) {
-      // This node is the first we have seen that is connected to the other.
-      // Grab it!
-      x2 = dn.t;
-      xidx2 = dn.idx;
-    }
-    else {
-      // We either a) already have two connected nodes, or b) this node is
-      // not connected to the first. Pass it on to diagram2.
-      nodes2.push_back(dn);
-    }
-  }
-
-  // Create a temporary tensor for the contraction.
-  Tensor* t5 = new Tensor(2, x1->getSize());
-  contract(*x1, *x2, matchChars(xidx1, xidx2), *t5);
-  string idx5 = residualString(xidx1, xidx2);
-
-  // Create a new node for the tensor.
-  DiagramNode n5;
-  n5.t = t5; n5.idx = idx5;
-  nodes2.push_back(n5);
-
-  // Compute the rest of the contraction as diagram2
-  cdouble res = diagram2(nodes2);
-  delete t5;
-  return res;
-
-}
-
-
-cdouble diagram4(vector<DiagramNode>& nodes) {
-
-  return contract(*nodes[0].t,*nodes[1].t,
-                  matchChars(nodes[0].idx,nodes[1].idx));
-
-}
-
-
-cdouble diagram5(vector<DiagramNode>& nodes) {
-
-  // Strategy: we contract the rank 2 tensor with a rank 3 tensor and compute
-  // the rest as an instance of diagram4
-
-  vector<DiagramNode> nodes2; // The nodes to pass to diagram4
-
-  Tensor* x1; string xidx1;
-  Tensor* x2; string xidx2;
-
-  bool found_rank3 = false;
-  for (DiagramNode dn : nodes) {
-    // We need to find the rank 2 tensor and a rank 3 tensor and contract
-    // them. The last one is passed on to diagram4
-    if (dn.t->getRank() == 2) {
-      // Found the rank 2 tensor!
-      x1 = dn.t;
-      xidx1 = dn.idx;
-    }
-    else if (found_rank3) {
-      // The node is the second rank 3 tensor. Pass it on to diagram4
-      nodes2.push_back(dn);
-    }
-    else {
-      // The first rank 3 tensor. Grab it!
-      x2 = dn.t;
-      xidx2 = dn.idx;
-      found_rank3 = true;
-    }
-  }
-
-  // Create a temporary tensor and contract.
-  Tensor *t4 = new Tensor(3, x1->getSize());
-  contract(*x1, *x2, matchChars(xidx1,xidx2), *t4);
-  string idx4 = residualString(xidx1,xidx2);
-
-  // Create the new node.
-  DiagramNode n4;
-  n4.t = t4; n4.idx = idx4;
-  nodes2.push_back(n4);
-
-  // Compute the rest of the contraction as a diagram4
-  cdouble res = diagram4(nodes2);
-  delete t4;
-  return res;
-
-}
-
-cdouble diagram6(vector<DiagramNode>& nodes) {
-
-  // Strategy: Contract the two rank 2 tensors and compute the rest of the
-  // diagram as a diagram5
-
-  vector<DiagramNode> nodes2; // The nodes to pass to diagram5
-
-  Tensor* x1; string xidx1;
-  Tensor* x2; string xidx2;
-
-  bool found_one = false;
-  for (DiagramNode dn : nodes) {
-    // We look for the two rank 2 tensors to contract here. Rank 3 tensors
-    // are passed on to diagram5
-    if (dn.t->getRank() == 2) {
-      if (found_one) {
-        // The second rank 2 tensor.
-        x2 = dn.t;
-        xidx2 = dn.idx;
-      } else {
-        // The first rank 2 tensor
-        x1 = dn.t;
-        xidx1 = dn.idx;
-        found_one = true;
-      }
-    }
-    else {
-      // Rank 3 tensor. Pass it on.
-      nodes2.push_back(dn);
-    }
-  }
-
-  // Contract the two rank 2 tensors.
-  Tensor* t5 = new Tensor(2,x1->getSize());
-  contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
-  string idx5 = residualString(xidx1,xidx2);
-
-  // Create the new node.
-  DiagramNode n5;
-  n5.t = t5; n5.idx = idx5;
-  nodes2.push_back(n5);
-
-  // Compute the rest as a diagram5.
-  cdouble res = diagram5(nodes2);
-  delete t5;
-  return res;
-
-}
-
-cdouble diagram7(vector<DiagramNode>& nodes) {
-
-  // Strategy: contract a rank 2 and a rank 3 tensor and treat the rest as an
-  // instance of diagram5
-
-  Tensor* x1; string xidx1;
-  Tensor* x2; string xidx2;
-
-  vector<DiagramNode> nodes2; // The nodes to pass to diagram5
-
-  bool found_rank2 = false;
-  bool found_rank3 = false;
-  for (DiagramNode dn : nodes) {
-    // Find a rank 2 and a rank 3 tensor, and pass the rest on
-    if (dn.t->getRank() == 2) {
-      if (found_rank2) {
-        nodes2.push_back(dn);
-      }
-      else {
-        x1 = dn.t;
-        xidx1 = dn.idx;
-        found_rank2 = true;
-      }
-    }
-    else {
-      if (found_rank3) {
-        nodes2.push_back(dn);
-      }
-      else {
-        x2 = dn.t;
-        xidx2 = dn.idx;
-        found_rank3 = true;
-      }
-    }
-  }
-
-  // Contract the two tensors
-  Tensor* t5 = new Tensor(3, x1->getSize());
-  contract(*x1,*x2, matchChars(xidx1,xidx2), *t5);
-  string idx5 = residualString(xidx1,xidx2);
-
-  // Create the new node
-  DiagramNode n5;
-  n5.t = t5; n5.idx = idx5;
-  nodes2.push_back(n5);
-
-  // Compute the result as diagram5
-  cdouble res = diagram5(nodes2);
-  delete t5;
-  return res;
-
-}
-
-cdouble diagram8(vector<DiagramNode>& nodes) {
-
-  // Strategy: Contract two tensors connected by two indices and compute the
-  // rest as a diagram5
-
-  vector<DiagramNode> nodes2;
-
-  // We always use the first node. We need to find the node connected to the
-  // first one by two indices
-  Tensor* x; string xidx;
-
-  for (int i = 1; i < 4; ++i) {
-    if (matchChars(nodes[0].idx, nodes[i].idx).size() == 2) {
-      x = nodes[i].t;
-      xidx = nodes[i].idx;
-    }
-    else {
-      nodes2.push_back(nodes[i]);
-    }
-  }
-
-  // Contract the two tensors
-  Tensor* t5 = new Tensor(2, x->getSize());
-  contract(*nodes[0].t, *x, matchChars(nodes[0].idx, xidx), *t5);
-  string idx5 = residualString(nodes[0].idx, xidx);
-
-  // Create the new node
-  DiagramNode n5;
-  n5.t = t5; n5.idx = idx5;
-  nodes2.push_back(n5);
-
-  // Compute the result as diagram5
-  cdouble res = diagram5(nodes2);
-  delete t5;
-  return res;
-
-}
-
-
 
 
 
