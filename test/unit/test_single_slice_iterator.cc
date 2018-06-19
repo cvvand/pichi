@@ -1,3 +1,4 @@
+#include "tensor.h"
 #include "slice_iterator.h"
 #include "gtest/gtest.h"
 
@@ -11,7 +12,7 @@ using namespace std;
 namespace {
 
 TEST(SingleIterator, Trace) {
-  SingleSliceIterator s(2,64,{{0,1}});
+  SingleSliceIterator s(Tensor(2,64),{{0,1}});
   ASSERT_EQ(2,s.getSlice1().size());
   EXPECT_EQ(-1, s.getSlice1()[0]);
   EXPECT_EQ(-1, s.getSlice1()[1]);
@@ -19,7 +20,7 @@ TEST(SingleIterator, Trace) {
 }
 
 TEST(SingleIterator, AllContracted) {
-  SingleSliceIterator s(4,64,{{0,1},{2,3}});
+  SingleSliceIterator s(Tensor(4,64),{{0,1},{2,3}});
   ASSERT_EQ(4,s.getSlice1().size());
   EXPECT_EQ(-1, s.getSlice1()[0]);
   EXPECT_EQ(-1, s.getSlice1()[1]);
@@ -29,7 +30,7 @@ TEST(SingleIterator, AllContracted) {
 }
 
 TEST(SingleIterator, NextContracted) {
-  SingleSliceIterator s(6,2,{{0,1},{2,3},{4,5}});
+  SingleSliceIterator s(Tensor(6,2),{{0,1},{2,3},{4,5}});
   ASSERT_EQ(6,s.getSlice1().size());
   EXPECT_EQ(-1, s.getSlice1()[0]);
   EXPECT_EQ(-1, s.getSlice1()[1]);
@@ -68,7 +69,7 @@ TEST(SingleIterator, NextContracted) {
 }
 
 TEST(SingleIterator, NextSlicedFree) {
-  SingleSliceIterator s(4,2,{{0,1}});
+  SingleSliceIterator s(Tensor(4,2),{{0,1}});
   ASSERT_EQ(4,s.getSlice1().size());
   EXPECT_EQ(-1, s.getSlice1()[0]);
   EXPECT_EQ(-1, s.getSlice1()[1]);
@@ -96,7 +97,7 @@ TEST(SingleIterator, NextSlicedFree) {
 }
 
 TEST(SingleIterator, NextNonSlicedFree) {
-  SingleSliceIterator s(6,2,{{0,1}});
+  SingleSliceIterator s(Tensor(6,2),{{0,1}});
   ASSERT_EQ(6,s.getSlice1().size());
   EXPECT_EQ(-1, s.getSlice1()[0]);
   EXPECT_EQ(-1, s.getSlice1()[1]);
@@ -135,21 +136,22 @@ TEST(SingleIterator, NextNonSlicedFree) {
 }
 
 TEST(SingleIteratorErrorHandling, ValidRankAndSize) {
-  EXPECT_THROW(SingleSliceIterator(1,64,{{0,1}}), invalid_argument);
-  EXPECT_THROW(SingleSliceIterator(2,1,{{0,1}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(1,64),{{0,1}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(2,1),{{0,1}}), invalid_argument);
 }
 
 TEST(SingleIteratorErrorHandling, ErrorIfContractionsIsEmpty) {
-  EXPECT_THROW(SingleSliceIterator(4,64,{}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(4,64),{}), invalid_argument);
 }
 
 TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsInvalid) {
-  EXPECT_THROW(SingleSliceIterator(4,64,{{0,4}}), invalid_argument);
-  EXPECT_THROW(SingleSliceIterator(4,64,{{-1,3}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(4,64),{{0,4}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(4,64),{{-1,3}}), invalid_argument);
 }
 
 TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsRepeated) {
-  EXPECT_THROW(SingleSliceIterator(6,64,{{0,4},{0,1}}), invalid_argument);
+  EXPECT_THROW(SingleSliceIterator(Tensor(6,64),{{0,4},{0,1}}),
+               invalid_argument);
 }
 
 }

@@ -124,7 +124,7 @@ Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
   }
 
   // Set up slice iterator
-  SingleSliceIterator it(tensor.getRank(), tensor.getSize(), idx);
+  SingleSliceIterator it(tensor, idx);
 
   // Set storage for input tensor
   setStorage(tensor, it.getSlice1());
@@ -178,98 +178,6 @@ Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
 }
 
 
-void contract(Tensor& t1, const std::vector<std::pair<int, int>>& idx,
-              Tensor& tout) {
-
-  /*
-   * Contractions on the form
-   *   A_aabbcde = B_cde
-   * which we compute as a sum of traces on each output slice:
-   *   B_012 = tr(A_**00012) + tr(A_**11012) + ...
-   */
-
-  // Check that there are contracted indices
-  if (idx.empty())
-    throw invalid_argument("List of contracted indices is empty");
-
-  // Get the number of free indices
-  int free_out = t1.getRank() - 2*idx.size();
-  if (free_out <= 1)
-    throw invalid_argument("Too many contracted indices");
-
-  // Check that the output matches
-  if (tout.getRank() != free_out)
-    throw invalid_argument("Output tensor has wrong rank");
-  if (tout.getSize() != t1.getSize())
-    throw invalid_argument("Tensor sizes must be equal");
-
-  // Check that we have no repeated indices
-  unordered_set<int> seen;
-  for (pair<int,int> p : idx) {
-    if (p.first < 0 || p.first >= t1.getRank() ||
-        p.second < 0 || p.second >= t1.getRank())
-      throw invalid_argument("Indices must be between 0 and R-1, where R is "
-                             "the tensor rank");
-    if (!(seen.insert(p.first).second && seen.insert(p.second).second))
-      throw invalid_argument("List of contracted indices "
-                             "contains an index twice");
-  }
-
-  // Set up the iterator
-  SingleSliceIterator it(t1.getRank(), t1.getSize(), idx);
-
-  // Set storage for input tensor
-  setStorage(t1, it.getSlice1());
-
-  // Set storage for output tensor
-  vector<int> storage_out(free_out, 0);
-  int count1 = 0;
-  int count2 = 2;
-  for (int i = 0; i < free_out; ++i) {
-    if (it.getSliceOut()[i] < 0)
-      storage_out[count1++] = i;
-    else
-      storage_out[count2++] = i;
-  }
-  tout.setStorage(storage_out);
-
-  // Make ready arrays for matrix multiplication
-  cdouble data1[t1.getSize() * t1.getSize()];
-  cdouble data_out[tout.getSize() * tout.getSize()];
-
-  do { // Loop over non-sliced free indices on the output tensor
-
-    // x is the current index in data_out, which resets when we change
-    // slice on the output tensor.
-    int x = 0;
-
-    do { // Loop through free indices sliced on the output tensor
-      data_out[x] = 0;
-
-      do { // Loop through contracted, non-sliced indices on input tensors
-
-        // Get the current slices in matrix form
-        t1.getSlice(it.getSlice1(), data1);
-
-        data_out[x] += trace(cx_mat(data1, t1.getSize(), t1.getSize()));
-
-        // Increase the contracted non-sliced indices on input tensors
-      } while (it.nextContracted());
-
-      ++x;
-
-      // Increase free indices, sliced on the output tensor
-    } while (it.nextSlicedFree());
-
-    // Set the current slice of the output tensor
-    tout.setSlice(it.getSliceOut(), data_out);
-
-  } while (it.nextNonSlicedFree());
-
-}
-
-
-
 Tensor contract(Tensor& t1, Tensor& t2,
                 const std::vector<std::pair<int, int>>& idx) {
 
@@ -295,11 +203,11 @@ Tensor contract(Tensor& t1, Tensor& t2,
   int size = t1.getSize();
 
   // Set up the iterator
-  DoubleSliceIterator it(t1.getRank(), t2.getRank(), t1.getSize(), idx);
+  DoubleSliceIterator it(t1, t2, idx);
 
   // Make sure tensor data is stored appropriately in the input tensors
-  setStorage(t1, it.getSlice1());
-  setStorage(t2, it.getSlice2());
+  //setStorage(t1, it.getSlice1());
+  //setStorage(t2, it.getSlice2());
 
 
   // Create output tensor and set storage
@@ -323,7 +231,6 @@ Tensor contract(Tensor& t1, Tensor& t2,
   cdouble data2[t2.getSize()*t2.getSize()];
   cdouble data_out[tout.getSize() * tout.getSize()];
 
-  // Loop over the non-sliced contracted indices
   do { // Loop through free indices, not sliced on the output tensor
 
     if (idx.size() >= 2) {

@@ -2,6 +2,7 @@
 #define PICHI_SLICE_ITERATOR_H
 
 #include <vector>
+#include "tensor.h"
 
 namespace pichi {
 
@@ -17,7 +18,7 @@ namespace pichi {
  *   - Sliced and contracted indices on input tensors (SC)
  *   - Non-sliced and contracted indices on input tensors (NC)
  *   - Free indices, sliced on the output tensor (SF)
- *   - Free indices, not slice on the output tensor (NF)
+ *   - Free indices, not sliced on the output tensor (NF)
  *
  * As an example, consider the contraction
  *
@@ -63,6 +64,13 @@ namespace pichi {
  *  A: (1,1,0,-1,-2,1)
  *  B: (1,-2,-1,0)
  *
+ *  Whenever there is a choice as to which index to assign which role, we
+ *  always try to make the optimal choice based on the storage in the tensors.
+ *  If possible we slice on the leading dimensions of the tensors to be able
+ *  to quickly grab the data in one go. When this is not possible, a
+ *  sub-optimal choice will have to be made.
+ *  For now this optimisation is only present in the DoubleSliceItarator
+ *
  * ***********************************************************************/
 
 class DoubleSliceIterator {
@@ -86,7 +94,7 @@ public:
    * second tensor.
    *
    */
-  DoubleSliceIterator(int rank1, int rank2, int size,
+  DoubleSliceIterator(const Tensor& t1, const Tensor& t2,
                       const std::vector<std::pair<int,int>>& contractions);
 
   /*
@@ -147,7 +155,7 @@ class SingleSliceIterator {
 public:
 
   /*
-   * Initiates an iterator for one tensors of a given rank and size as well
+   * Initiates an iterator for one tensor of a given rank and size as well
    * as a list of contracted indices.
    * The contractions is a list of pairs of integers. Each pair corresponds
    * to a contraction of indices. For example, the contraction
@@ -157,7 +165,7 @@ public:
    * Would look like
    *    {{0,1},{2,3}}
    */
-  SingleSliceIterator(int rank1, int size,
+  SingleSliceIterator(const Tensor&,
                       const std::vector<std::pair<int,int>>& contractions);
 
   /*

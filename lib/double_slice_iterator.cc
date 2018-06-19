@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <unordered_set>
+#include <queue>
 #include <iostream>
 #include "slice_iterator.h"
 
@@ -8,10 +9,13 @@ using namespace std;
 namespace pichi {
 
 
-DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
-                                         const std::vector<
-                                             std::pair<int, int>>& contr) :
-    size(size) {
+DoubleSliceIterator::DoubleSliceIterator(
+    const Tensor& t1, const Tensor& t2,
+    const std::vector<std::pair<int, int>>& contr) {
+
+  int rank1 = t1.getRank();
+  int rank2 = t2.getRank();
+  size = t1.getSize();
 
   // Check rank and size
   if (rank1 < 2 || rank2 < 2) {
@@ -34,85 +38,246 @@ DoubleSliceIterator::DoubleSliceIterator(int rank1, int rank2, int size,
       throw invalid_argument("Repeated index in contraction list");
   }
 
+  vector<int> store1 = t1.getStorage();
+  vector<int> store2 = t2.getStorage();
+
   // Set up data structures
 
   slice1 = vector<int>(rank1, 0);
   slice2 = vector<int>(rank2, 0);
   slice_out = vector<int>(rank1+rank2-2*contr.size(), 0);
 
-  // We slice input tensors along the first contracted index (SC)
-  slice1[contr[0].first] = -1;
-  slice2[contr[0].second] = -1;
+  if (contr.size() == 1) {
 
-  // If there are two or more contracted indices, we slice along the second
-  // contracted index as well.
-  if (contr.size() >= 2) {
-    slice1[contr[1].first] = -2;
-    slice2[contr[1].second] = -2;
-  }
+    // There is one contracted index:
 
-  // The rest of the contracted indices are put in the NC category
-  for (int i = 2; i < contr.size(); ++i)
-    nc.push_back(contr[i]);
+    // Two cases:
+    // 1) The contracted index is in a leading dimension.
+    //    SC: the contracted index
+    //    NC: none
+    //    SF: the index in the remaining leading dimension
+    //    NF: the rest
+    // 2) The contracted index is not in a leading dimension.
+    //    SC: the contracted index
+    //    NC: none
+    //    SF: the index in the leading dimension
+    //    NF: the rest
 
-  // Find the number of free indices on each input tensor
-  int nfree_1 = rank1 - contr.size();
-  int nfree_2 = rank2 - contr.size();
+    pair<int,int> c = contr[0];
 
-  // Search for free indices on tensor 1
-  int out_index = 0; // Keep track of the index number on the output tensor
-  bool first_free = true;
-  for (int i = 0; i < rank1; ++i) {
-    bool free = true;
-    for (int j = 0; j < contr.size() && free; ++j) {
-      // Figure out if index i is contracted. If not, it is free
-      if (contr[j].first == i)
-        free = false;
-    }
-    if (free && first_free) {
-      // If this is the first free index on tensor 1, we slice the output
-      // along this index (SF). If there is only one contracted index, we
-      // instead slice the first input tensor along this index
-      if (contr.size() >= 2)
-        sf1.push_back(i);
-      else
+    int out_index = 0;
+    // Start with tensor 1
+    for (int i = 0; i < rank1; ++i) {
+      if (i == c.first) {
+        // This is the contracted index: SC
+        slice1[i] = -1;
+      }
+      else if (i == store1[0]) {
+        // Not contracted, but leading: SF
         slice1[i] = -2;
-      slice_out[out_index++] = -1;
-      first_free = false;
-    } else if (free && nfree_2 == 0 && sf1.size() == 1) {
-      // The index is free, and there are no free indices on tensor 2. sf1
-      // has size 1, which means we only have 1 free index so far.
-      // Therefore, we also make this an SF index
-      sf1.push_back(i);
-      slice_out[out_index++] = -1;
-    } else if (free) {
-      // If the index is free, but not the first free index, it belongs in
-      // the NF category.
-      nf1.emplace_back(i, out_index++);
+        slice_out[out_index++] = -1;
+      }
+      else if (i == store1[1]) {
+        // Not contracted, but sub-leading: SF or NF
+        if (c.first == store1[0]) {
+          // SF
+          slice1[i] = -2;
+          slice_out[out_index++] = -1;
+        }
+        else {
+          // NF
+          nf1.push_back(make_pair(i,out_index++));
+        }
+      }
+      else {
+        // Not contracted, not a leading dimension: NF
+        nf1.push_back(make_pair(i,out_index++));
+      }
     }
-  }
-
-  // Search for free indices on tensor 2
-  first_free = true;
-  for (int i = 0; i < rank2; ++i) {
-    bool free = true;
-    for (int j = 0; j < contr.size() && free; ++j) {
-      if (contr[j].second == i)
-        free = false;
-    }
-    if (free && first_free) {
-      if (contr.size() >= 2)
-        sf2.push_back(i);
-      else
+    // ... then tensor 2
+    for (int i = 0; i < rank2; ++i) {
+      if (i == c.second) {
+        // This is the contracted index: SC
+        slice2[i] = -1;
+      }
+      else if (i == store2[0]) {
+        // Not contracted, but leading: SF
         slice2[i] = -2;
-      slice_out[out_index++] = -1;
-      first_free = false;
-    } else if (free && nfree_1 == 0 && sf2.size() == 1) {
-      sf2.push_back(i);
-      slice_out[out_index++] = -1;
-    } else if (free) {
-      nf2.emplace_back(i,out_index++);
+        slice_out[out_index++] = -1;
+      }
+      else if (i == store2[1]) {
+        // Not contracted, but sub-leading: SF or NF
+        if (c.second == store2[0]) {
+          // SF
+          slice2[i] = -2;
+          slice_out[out_index++] = -1;
+        }
+        else {
+          // NF
+          nf2.push_back(make_pair(i,out_index++));
+        }
+      }
+      else {
+        // Not contracted, not a leading dimension: NF
+        nf2.push_back(make_pair(i,out_index++));
+      }
     }
+
+
+  }
+  else {
+
+    // There are two or more contracted indices:
+
+    // We slice along two of the contracted indices. We go through the list
+    // of contracted indices repeatedly until we have two indices to slice.
+    // First pass: take any index in a leading dimension on both tensors
+    // Second pass: take any index in a leading dimension on one tensor.
+    // Last pass: take any contracted index until we have two.
+
+    // After having selected the SC indices, all the rest of the contracted
+    // indices are NC indices
+
+    // We now choose the SF indices. If the result is not a scalar, then we
+    // need two SF indices. Otherwise we need none.
+    // We start adding any index which is a leading dimension index but is
+    // not contracted. If we are still missing one or two SF indices, we
+    // simply pick the first two free indices available.
+
+    // The rest of the free indices are NF indices.
+
+    // We keep a list of whether the indices are free or contracted
+    vector<bool> free1(rank1, true);
+    vector<bool> free2(rank2, true);
+
+    // First we insert all the contractions into a queue
+    queue<pair<int,int>> contr_cp;
+    for (pair<int,int> c : contr) {
+      free1[c.first] = false;
+      free2[c.second] = false;
+      contr_cp.push(c);
+    }
+
+    // Pass through list of contracted indices until we have two SC
+    int pass = 0; int found = 0;
+    while (found < 2) {
+      int pass_length = contr_cp.size();
+      for (int i = 0; (i < pass_length && found < 2); ++i) {
+        pair<int,int> c = contr_cp.front();
+        contr_cp.pop();
+        if (pass == 0 &&
+            ((c.first  == store1[0] || c.first  == store1[1]) &&
+             (c.second == store2[0] || c.second == store2[1]))) {
+          // First pass and index is leading on both tensors
+          slice1[c.first]  = -(++found);
+          slice2[c.second] = -found;
+        }
+        else if (pass == 1 &&
+                 (c.first  == store1[0] || c.first  == store1[1] ||
+                  c.second == store2[0] || c.second == store2[1])) {
+          // Second pass and index is leading on one tensor
+          slice1[c.first]  = -(++found);
+          slice2[c.second] = -found;
+        }
+        else if (pass == 2) {
+          // Third pass: take the index no matter what
+          slice1[c.first]  = -(++found);
+          slice2[c.second] = -found;
+        }
+        else {
+          // The contracted index is not a good slicing index. Back in line.
+          contr_cp.push(c);
+        }
+      }
+      ++pass;
+    }
+
+    // All indices still in the queue go in the NC category
+    while (!contr_cp.empty()) {
+      nc.push_back(contr_cp.front());
+      contr_cp.pop();
+    }
+
+    // If the two tensors are completely contracted, we stop here
+    if (slice_out.size() == 0)
+      return;
+
+    // There are free indices. Put them into a queue
+    queue<pair<int,int>> free1q;
+    queue<pair<int,int>> free2q;
+
+    int out_index = 0;
+    for (int i = 0; i < rank1; ++i) {
+      if (free1[i])
+        free1q.push(make_pair(i,out_index++));
+    }
+    for (int i = 0; i < rank2; ++i) {
+      if (free2[i])
+        free2q.push(make_pair(i,out_index++));
+    }
+
+    // Pass through the free indices until we have two SF
+    pass = 0; found = 0;
+    while (found < 2) {
+      int pass_length = free1q.size();
+      for (int i = 0; (i < pass_length && found < 2); ++i) {
+        pair<int,int> f = free1q.front();
+        free1q.pop();
+        if (pass == 0 &&
+            (f.first == store1[0] || f.first == store1[1])) {
+          // First pass and index is leading on tensor 1
+          sf1.push_back(f.first);
+          slice_out[f.second] = -1;
+          ++found;
+        }
+        else if (pass == 1) {
+          // Second pass: take the index no matter what
+          sf1.push_back(f.first);
+          slice_out[f.second] = -1;
+          ++found;
+        }
+        else {
+          // The index is not a good slicing index. Back in line.
+          free1q.push(f);
+        }
+      }
+      pass_length = free2q.size();
+      for (int i = 0; (i < pass_length && found < 2); ++i) {
+        pair<int,int> f = free2q.front();
+        free2q.pop();
+        if (pass == 0 &&
+            (f.first == store2[0] || f.first == store2[1])) {
+          // First pass and index is leading on tensor 1
+          sf2.push_back(f.first);
+          slice_out[f.second] = -1;
+          ++found;
+        }
+        else if (pass == 1) {
+          // Second pass: take the index no matter what
+          sf2.push_back(f.first);
+          slice_out[f.second] = -1;
+          ++found;
+        }
+        else {
+          // The index is not a good slicing index. Back in line.
+          free2q.push(f);
+        }
+      }
+      ++pass;
+    }
+
+    // All the rest of the free indices go in the NF category
+    while (!free1q.empty()) {
+      nf1.push_back(free1q.front());
+      free1q.pop();
+    }
+    while (!free2q.empty()) {
+      nf2.push_back(free2q.front());
+      free2q.pop();
+    }
+
+
+
   }
 
 }

@@ -13,8 +13,8 @@
 #include <iomanip>
 #include <chrono>
 
-#define N 100
-#define P 20
+#define N 10
+#define P 0
 #define SIZE 64
 
 using namespace pichi;
@@ -64,19 +64,19 @@ double stdev(vector<double> x) {
 
 void header() {
   cout << "Launching PICHI benchmark test 1" << endl << endl;
-  cout << "Computing the diagram A_abc B_abd C_ce D_de" << endl;
+  cout << "Computing the contraction A_abc B_abc" << endl;
   cout << "   Running the test " << N << " times with tensors of size " <<
        SIZE << endl;
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
 
   cout << "---------------------------------- " << endl << endl;
-  cout << "#\tT/ms\tResult" << endl;
+  cout << "#\tT/ms" << endl;
   cout << "------------------------" << endl;
 
 }
 
-void writeRun(int n, double etot, cdouble res) {
-  cout << setprecision(3) << n << "\t" << 1000*etot << "\t\t" << res << endl;
+void writeRun(int n, double etot) {
+  cout << setprecision(3) << n << "\t" << 1000*etot << endl;
 }
 
 void report(vector<double> times) {
@@ -96,31 +96,23 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    Tensor* a = new Tensor(2, SIZE);
-    Tensor* b = new Tensor(2, SIZE);
-    Tensor* c = new Tensor(2, SIZE);
-    Tensor* d = new Tensor(2, SIZE);
+    Tensor a(3, SIZE, {0,1,2});
+    Tensor b(3, SIZE, {0,1,2});
+    //Tensor c(2, SIZE);
+    //Tensor d(2, SIZE);
 
-    fill2(*a);
-    fill2(*b);
-    fill2(*c);
-    fill2(*d);
-
-    DiagramNode dna, dnb, dnc, dnd;
-    dna.t = a; dna.idx = "ab";
-    dnb.t = b; dnb.idx = "bc";
-    dnc.t = c; dnc.idx = "cd";
-    dnd.t = d; dnd.idx = "ad";
-
-    vector<DiagramNode> nodes;
-    nodes.push_back(dna);
-    nodes.push_back(dnb);
-    nodes.push_back(dnc);
-    nodes.push_back(dnd);
+    fill3(a);
+    fill3(b);
+    //fill2(c);
+    //fill2(d);
 
     auto start = chrono::steady_clock::now();
 
-    cdouble r = diagram3(nodes);
+    Tensor t1 = contract(a,b, {{2,2},{0,0},{1,1}});
+    //Tensor t2 = contract(t1,b, {{0,0},{1,1},{2,2}});
+    //Tensor t3 = contract(t2,d, {{0,1},{1,0}});
+    //cdouble r[1];
+    //t2.getSlice({0}, r);
 
     auto end = chrono::steady_clock::now();
 
@@ -128,10 +120,8 @@ int main() {
         chrono::duration<double>>(end-start).count();
     if (i >= 0) {
       times.push_back(et_tot);
-      writeRun(i, et_tot, r);
+      writeRun(i, et_tot);
     }
-
-    delete a; delete b; delete c; delete d;
 
   }
 

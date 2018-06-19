@@ -1,16 +1,18 @@
 
 #include <stdexcept>
 #include <unordered_set>
+#include "tensor.h"
 #include "slice_iterator.h"
 
 using namespace std;
 
 namespace pichi {
 
-SingleSliceIterator::SingleSliceIterator(int rank1, int size,
-                                         const vector<
-                                             std::pair<int, int>>& contractions) :
-    size(size) {
+SingleSliceIterator::SingleSliceIterator(
+    const Tensor& tensor, const vector<std::pair<int, int>>& contractions)
+     : size(tensor.getSize()) {
+
+  int rank1 = tensor.getRank();
 
   // Check rank and size
   if (rank1 < 2) {
