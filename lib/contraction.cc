@@ -199,16 +199,30 @@ Tensor contract(Tensor& t1, Tensor& t2,
   }
 
   // Compute output tensor rank and size
-  int rank = t1.getRank() + t2.getRank() - 2*idx.size();
+  int rank1 = t1.getRank();
+  int rank2 = t2.getRank();
+  int nc = idx.size();
+  int rank = rank1 + rank2 - 2*nc;
   int size = t1.getSize();
 
   // Set up the iterator
   DoubleSliceIterator it(t1, t2, idx);
 
-  // Make sure tensor data is stored appropriately in the input tensors
-  //setStorage(t1, it.getSlice1());
-  //setStorage(t2, it.getSlice2());
-
+  // We change the input data storage if it is beneficial based on a heuristic:
+  // Let:
+  //   r1 = rank(t1)
+  //   r2 = rank(t2)
+  //   rm = max(r1,r2)
+  //   c = # of contracted indices
+  //   m = r1 + r2 - 4          if  c = 1 ,
+  //       r1 + r2 - 4 - (c-2)  if  c > 1
+  // We reorder the storage if   rm - m < 2
+  int rm = (rank1 > rank2 ? rank1 : rank2);
+  int m = (nc == 1 ? rank1+rank2-4 : rank1+rank2-4-(nc-2));
+  if (rm - m < 2) {
+    setStorage(t1, it.getSlice1());
+    setStorage(t2, it.getSlice2());
+  }
 
   // Create output tensor and set storage
   vector<int> storage_out(rank, 0);

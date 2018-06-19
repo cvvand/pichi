@@ -14,8 +14,8 @@
 #include <chrono>
 
 #define N 10
-#define P 0
-#define SIZE 64
+#define P 2
+#define SIZE 16
 
 using namespace pichi;
 using namespace std;
@@ -44,6 +44,18 @@ void fill3(Tensor& t) {
     for (int i = 0; i < s * s; ++i)
       slice[i] = rc();
     t.setSlice({-1, -1, j}, slice);
+  }
+}
+
+void fill4(Tensor& t) {
+  int s = t.getSize();
+  cdouble slice[s*s];
+  for (int k = 0; k < s; ++k) {
+    for (int j = 0; j < s; ++j) {
+      for (int i = 0; i < s * s; ++i)
+        slice[i] = rc();
+      t.setSlice({-1, -1, j, k}, slice);
+    }
   }
 }
 
@@ -96,19 +108,26 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    Tensor a(3, SIZE, {0,1,2});
-    Tensor b(3, SIZE, {0,1,2});
+    //Tensor a(3, SIZE);
+    //Tensor b(3, SIZE, {1,2,0});
     //Tensor c(2, SIZE);
     //Tensor d(2, SIZE);
+    Tensor e(4, SIZE);
+    Tensor f(4, SIZE);
 
-    fill3(a);
-    fill3(b);
+    //fill3(a);
+    //fill3(b);
     //fill2(c);
     //fill2(d);
+    fill4(e);
+    fill4(f);
 
     auto start = chrono::steady_clock::now();
 
-    Tensor t1 = contract(a,b, {{2,2},{0,0},{1,1}});
+    //f.setStorage({2,3,1,0});
+    //e.setStorage({2,3,1,0});
+
+    Tensor t1 = contract(e,f, {{2,3},{3,2},{1,1}});
     //Tensor t2 = contract(t1,b, {{0,0},{1,1},{2,2}});
     //Tensor t3 = contract(t2,d, {{0,1},{1,0}});
     //cdouble r[1];
