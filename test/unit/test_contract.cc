@@ -94,10 +94,17 @@ TEST(Contract, abcd_ab) {
   Tensor t4 = contract(t1,t2,{{0,0},{1,1}});
   t4.getSlice({-1,-1}, data);
 
-  EXPECT_EQ(20.0, data[0]);
-  EXPECT_EQ(13.0, data[1]);
-  EXPECT_EQ(17.0, data[2]);
-  EXPECT_EQ(33.0, data[3]);
+  EXPECT_EQ(20.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]),1.0e-20);
+
+  EXPECT_EQ(13.0, real(data[1]));
+  EXPECT_NEAR(0.0, imag(data[1]),1.0e-20);
+
+  EXPECT_EQ(17.0, real(data[2]));
+  EXPECT_NEAR(0.0, imag(data[1]),1.0e-20);
+
+  EXPECT_EQ(33.0, real(data[3]));
+  EXPECT_NEAR(0.0, imag(data[1]),1.0e-20);
 }
 
 TEST(Contract, ab_ba) {
@@ -117,7 +124,8 @@ TEST(Contract, ab_ba) {
   Tensor tr = contract(t1,t2,{{0,1},{1,0}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(7.0, data[0]);
+  EXPECT_EQ(7.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
 TEST(Contract, ab_ab) {
@@ -137,7 +145,8 @@ TEST(Contract, ab_ab) {
   Tensor tr = contract(t1,t2,{{0,0},{1,1}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(17.0, data[0]);
+  EXPECT_EQ(17.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
 TEST(Contract, ab_bc_ca) {
@@ -161,7 +170,8 @@ TEST(Contract, ab_bc_ca) {
   Tensor tr = contract(t4,t3,{{0,1},{1,0}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(70.0, data[0]);
+  EXPECT_EQ(70.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
 TEST(Contract, ab_cb_ac) {
@@ -185,7 +195,8 @@ TEST(Contract, ab_cb_ac) {
   Tensor tr = contract(t4,t3,{{0,0},{1,1}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(-41.0, data[0]);
+  EXPECT_EQ(-41.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
 TEST(Contract, ab_ac_cb) {
@@ -209,7 +220,9 @@ TEST(Contract, ab_ac_cb) {
   Tensor tr = contract(t4,t3,{{0,1},{1,0}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(70.0, data[0]);
+  EXPECT_EQ(70.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
+
 }
 
 TEST(Contract, ab_ca_cb) {
@@ -233,7 +246,8 @@ TEST(Contract, ab_ca_cb) {
   Tensor tr = contract(t4,t3,{{0,1},{1,0}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(-21.0, data[0]);
+  EXPECT_EQ(-21.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
 TEST(Contract, abc_bad_dc) {
@@ -263,7 +277,8 @@ TEST(Contract, abc_bad_dc) {
   Tensor tr = contract(t4,t3,{{0,1},{1,0}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(-28.0, data[0]);
+  EXPECT_EQ(-28.0, data[0].real());
+  EXPECT_NEAR(0.0, data[0].imag(), 1.0e-20);
 
 }
 
@@ -294,7 +309,8 @@ TEST(Contract, abc_abd_cd) {
   Tensor tr = contract(t4,t3,{{0,0},{1,1}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(-48.0, data[0]);
+  EXPECT_EQ(-48.0, data[0].real());
+  EXPECT_NEAR(0.0, data[0].imag(), 1.0e-20);
 
 }
 
@@ -325,7 +341,8 @@ TEST(Contract, abc_abd_cd2) {
   Tensor tr = contract(t4,t3,{{0,0},{1,1}});
   tr.getSlice({0},data);
 
-  EXPECT_EQ(-48.0, data[0]);
+  EXPECT_EQ(-48.0, data[0].real());
+  EXPECT_NEAR(0.0, data[0].imag(), 1.0e-20);
 
 }
 
@@ -368,7 +385,8 @@ TEST(Contract, abcd_dcbe_ea) {
   Tensor t5 = contract(t4,t3, {{0,1},{1,0}});
   cdouble datar[1];
   t5.getSlice({0},datar);
-  EXPECT_EQ(-68.0, datar[0]);
+  EXPECT_EQ(-68.0, datar[0].real());
+  EXPECT_NEAR(0.0, data[0].imag(), 1.0e-20);
 
 }
 
@@ -394,7 +412,8 @@ TEST(Contract, abc_cba) {
   cdouble datar[1];
   t3.getSlice({0},datar);
 
-  EXPECT_EQ(16.0, datar[0]);
+  EXPECT_EQ(16.0, datar[0].real());
+  EXPECT_NEAR(0.0, datar[0].imag(), 1.0e-20);
 
 }
 
@@ -426,7 +445,8 @@ TEST(Contract, abc_cd_dba) {
   cdouble datar[1];
   t5.getSlice({0}, datar);
 
-  EXPECT_EQ(-75.0, datar[0]);
+  EXPECT_EQ(-75.0, datar[0].real());
+  EXPECT_NEAR(0.0, datar[0].imag(), 1.0e-20);
 
 }
 
@@ -467,7 +487,8 @@ TEST(Contract, abcd_dce_eba) {
   cdouble datar[1];
   t5.getSlice({0}, datar);
 
-  EXPECT_EQ(17.0, datar[0]);
+  EXPECT_EQ(17.0, datar[0].real());
+  EXPECT_NEAR(0.0, datar[0].imag(), 1.0e-20);
 
 }
 

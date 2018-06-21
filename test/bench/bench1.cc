@@ -13,9 +13,9 @@
 #include <iomanip>
 #include <chrono>
 
-#define N 10
-#define P 2
-#define SIZE 16
+#define N 100
+#define P 5
+#define SIZE 64
 
 using namespace pichi;
 using namespace std;
@@ -76,7 +76,7 @@ double stdev(vector<double> x) {
 
 void header() {
   cout << "Launching PICHI benchmark test 1" << endl << endl;
-  cout << "Computing the contraction A_abc B_abc" << endl;
+  cout << "Computing the contraction A_ab B_ac" << endl;
   cout << "   Running the test " << N << " times with tensors of size " <<
        SIZE << endl;
   cout << "   Warm-up runs without measuring: " << P << endl << endl;
@@ -109,25 +109,25 @@ int main() {
   for (int i = -P; i < N; ++i) {
 
     //Tensor a(3, SIZE);
-    //Tensor b(3, SIZE, {1,2,0});
-    //Tensor c(2, SIZE);
-    //Tensor d(2, SIZE);
-    Tensor e(4, SIZE);
-    Tensor f(4, SIZE);
+    //Tensor b(3, SIZE);
+    Tensor c(2, SIZE);
+    Tensor d(2, SIZE);
+    //Tensor e(4, SIZE);
+    //Tensor f(4, SIZE);
 
     //fill3(a);
     //fill3(b);
-    //fill2(c);
-    //fill2(d);
-    fill4(e);
-    fill4(f);
+    fill2(c);
+    fill2(d);
+    //fill4(e);
+    //fill4(f);
 
     auto start = chrono::steady_clock::now();
 
     //f.setStorage({2,3,1,0});
     //e.setStorage({2,3,1,0});
 
-    Tensor t1 = contract(e,f, {{2,3},{3,2},{1,1}});
+    Tensor t1 = contract(c,d, {{0,0},{1,1}});
     //Tensor t2 = contract(t1,b, {{0,0},{1,1},{2,2}});
     //Tensor t3 = contract(t2,d, {{0,1},{1,0}});
     //cdouble r[1];

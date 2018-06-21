@@ -9,6 +9,7 @@
 #include "slice_iterator.h"
 #include <armadillo>
 #include <unordered_set>
+//#include <cblas.h> If being used with blas
 
 using namespace std;
 using namespace arma;
@@ -262,15 +263,36 @@ Tensor contract(Tensor& t1, Tensor& t2,
           // Get the current slices in matrix form
           t1.getSlice(it.getSlice1(), data1);
           t2.getSlice(it.getSlice2(), data2);
+
           cx_mat m1(data1, t1.getSize(), t1.getSize());
           cx_mat m2(data2, t2.getSize(), t2.getSize());
 
-          // Some types are degenerate, see comments in
-          // contract(char,char,vector)
           if (transpose_type == 0 || transpose_type == 3)
             data_out[x] += trace(m1 * m2);
           else
             data_out[x] += trace(m1.st() * m2);
+
+          /* --------- DIRECT BLAS -------
+          int sz = t1.getSize();
+          double alpha = 1.0; double beta = 0.0;
+          cdouble res_data[sz*sz];
+
+          if (transpose_type == 0 || transpose_type == 3) {
+            cblas_zgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, sz, sz,
+                        sz, &alpha,
+                        reinterpret_cast<double *>(data1), sz,
+                        reinterpret_cast<double *>(data2), sz, &beta,
+                        reinterpret_cast<double *>(res_data), sz);
+          }
+          else {
+            cblas_zgemm(CblasColMajor, CblasTrans, CblasNoTrans, sz, sz,
+                        sz, &alpha,
+                        reinterpret_cast<double *>(data1), sz,
+                        reinterpret_cast<double *>(data2), sz, &beta,
+                        reinterpret_cast<double *>(res_data), sz);
+          }
+          for (int i = 0; i < sz; ++i)
+            data_out[x] += res_data[i+i*sz];*/
 
           // Increase the contracted non-sliced indices on input tensors
         } while (it.nextContracted());
@@ -290,6 +312,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
       // Get the current slices in matrix form
       t1.getSlice(it.getSlice1(), data1);
       t2.getSlice(it.getSlice2(), data2);
+
       cx_mat m1(data1, t1.getSize(), t1.getSize());
       cx_mat m2(data2, t2.getSize(), t2.getSize());
 
@@ -306,6 +329,38 @@ Tensor contract(Tensor& t1, Tensor& t2,
 
       // Set the slice on the output tensor
       tout.setSlice(it.getSliceOut(), mout.memptr());
+
+
+      /* --------- DIRECT BLAS -------
+      int sz = t1.getSize();
+      double alpha = 1.0; double beta = 0.0;
+      cdouble res_data[sz*sz];
+      CBLAS_TRANSPOSE trans1;
+      if (transpose_type == 1)
+        trans1 = CblasTrans;
+      else
+        trans1 = CblasNoTrans;
+      CBLAS_TRANSPOSE trans2;
+      if (transpose_type == 2)
+        trans2 = CblasTrans;
+      else
+        trans2 = CblasNoTrans;
+
+      if (transpose_type == 3) {
+        cblas_zgemm(CblasRowMajor, CblasTrans, CblasTrans, sz, sz, sz, &alpha,
+                    reinterpret_cast<double *>(data2), sz,
+                    reinterpret_cast<double *>(data1), sz, &beta,
+                    reinterpret_cast<double *>(res_data), sz);
+      }
+      else {
+        cblas_zgemm(CblasColMajor, trans1, trans2, sz, sz, sz, &alpha,
+                    reinterpret_cast<double *>(data1), sz,
+                    reinterpret_cast<double *>(data2), sz, &beta,
+                    reinterpret_cast<double *>(res_data), sz);
+      }
+
+      // Set the slice on the output tensor
+      tout.setSlice(it.getSliceOut(), res_data);*/
 
     }
 
