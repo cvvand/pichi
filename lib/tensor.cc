@@ -184,12 +184,12 @@ void Tensor::setElement(const std::vector<int>& index, cdouble value) {
   data[os] = value;
 }
 
-void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
+bool Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
   // For rank 0 tensors, just return the element, we don't check the slice
   if (dim == 0) {
     buff[0] = data[0];
-    return;
+    return false;
   }
 
   // Check slice
@@ -208,11 +208,8 @@ void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
   // Check if the data is correctly aligned:
   // The data is aligned correctly if the free indices of the slice
-  // corresponds to the first two entries in the storage tensor in ascending
-  // order
+  // corresponds to the first two entries in the storage tensor
   bool aligned = true;
-  if (storage[0] > storage[1])
-    aligned = false;
   for (int i = 0; i < dim && aligned; ++i) {
     if (slice[i] < 0) {
       // Still aligned if i is in one of the first two entries in the storage
@@ -232,6 +229,9 @@ void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
     // Copy from the offset and n*n elements forward
     std::copy(data+os, data + os + n*n, buff);
+
+    // Check whether the data is transposed
+    return storage[0] > storage[1];
 
   } else { // If not, do it the slow way
 
@@ -263,11 +263,14 @@ void Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
       }
     }
 
+    return false;
+
   }
 
 }
 
-void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
+void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff,
+                      bool trans) {
 
   // For rank 0 tensors, simply copy the element and don't worry about the slice
   if (dim == 0) {
@@ -291,10 +294,12 @@ void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
 
   // Check if the data is correctly aligned:
   // The data is aligned correctly if the free indices of the slice
-  // corresponds to the first two entries in the storage tensor in ascending
-  // order
+  // corresponds to the first two entries in the storage tensor in the
+  // correct order corresponding to whether the slice is transposed or not.
   bool aligned = true;
-  if (storage[0] > storage[1])
+  if ((storage[0] > storage[1]) && !trans)
+    aligned = false;
+  else if ((storage[1] > storage[0]) && trans)
     aligned = false;
   for (int i = 0; i < dim && aligned; ++i) {
     if (slice[i] < 0) {
@@ -331,6 +336,13 @@ void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff) {
           break;
         }
       }
+    }
+
+    // If slice is transposed, swap r1 and r2
+    if (trans) {
+      int temp = r1;
+      r1 = r2;
+      r2 = temp;
     }
 
     // Make a copy of the input slice vector with 0's on the running indices

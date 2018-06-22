@@ -131,8 +131,6 @@ public:
    *
    * In the actual input the * above should be replaced by a negative number,
    * signifying a running index.
-   * We assume always that the first running index is the leading dimension
-   * of the array.
    *
    * For a rank 2 tensor, the slice will be the entire tensor.
    *
@@ -143,19 +141,30 @@ public:
    * appropriately before a getting a number of slices along the same
    * dimensions.
    *
-   * GET: The tensor data will be copied to the input buffer and decoupled from
+   *
+   * GET: The getSlice function returns either true or false, depending on
+   * the storage of the tensor. If the function returns false, the array is
+   * returned with the first running index in the leading dimension. If the
+   * function returns true, the array is transposed, i.e. the second running
+   * index is the leading dimension.
+   * The tensor data will be copied to the input buffer and decoupled from
    * the actual tensor. Therefore, any changes made to the buffer will not
    * affect the tensor or any of its other slices, and any changes made to
    * the tensor will not modify the data in the buffer.
    *
-   * SET: When the call returns the data written to the tensor will be
+   * SET: When setSlice is called with only two parameters, the function
+   * expects the input array to have the first running index as the leading
+   * dimension. If instead the second running index should be the leading
+   * dimension, use the boolean TRUE as the third input parameter to indicate
+   * that the input array is transposed.
+   * When the call returns the data written to the tensor will be
    * decoupled from the input buffer. Later changes made to the tensor will
    * not modify the data in the buffer, and changes made to the buffer will
    * have no effect on the tensor.
    *
    */
-  void getSlice(const std::vector<int>&, cdouble*) const;
-  void setSlice(const std::vector<int>&, cdouble*);
+  bool getSlice(const std::vector<int>&, cdouble*) const;
+  void setSlice(const std::vector<int>&, cdouble*, bool trans = false);
 
 
   // --- Data storage ---------------------------------------------------
