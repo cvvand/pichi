@@ -114,7 +114,6 @@ public:
    */
   ~Tensor() noexcept;
 
-
   // --- Data ------------------------------------------------------------
 
   /*
@@ -181,6 +180,14 @@ public:
    */
   std::vector<int> getStorage() const;
   void setStorage(const std::vector<int>& store);
+
+  /*
+   * Resize the tensor. This deletes all data in the tensor and resets the
+   * internals of the tensor as if it was freshly created with a given rank,
+   * size and optionally a storage vector for the new tensor.
+   */
+  void resize(int rank, int size);
+  void resize(int rank, int size, const std::vector<int>& storage);
 
 
 

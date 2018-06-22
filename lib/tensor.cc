@@ -362,6 +362,21 @@ void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff,
 
 }
 
+void Tensor::resize(int rank, int size) {
+  delete[] data;
+  init(rank,size);
+
+  // Set default storage
+        storage = vector<int>(rank);
+  for (int i = 0; i < rank; ++i)
+    storage[i] = i;
+}
+
+void Tensor::resize(int rank, int size, const vector<int>& store) {
+  resize(rank,size);
+  storage = store;
+}
+
 vector<int> Tensor::getStorage() const {
   return storage;
 }
