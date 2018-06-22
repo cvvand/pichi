@@ -149,6 +149,69 @@ TEST(Contract, ab_ab) {
   EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
 }
 
+TEST(Contract, ab_ab_Tensor1Transposed) {
+  Tensor t1(2,3,{1,0});
+  cdouble data[9];
+  data[0] = 2.0; data[1] = 3.0; data[2] = 3.0;
+  data[3] = -1.0; data[4] = 2.0; data[5] = -4.0;
+  data[6] = 2.0; data[7] = -5.0; data[8] = -2.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,3);
+  data[0] = 2.0; data[1] = -2.0; data[2] = 5.0;
+  data[3] = -5.0; data[4] = -1.0; data[5] = -1.0;
+  data[6] = 3.0; data[7] = 3.0; data[8] = -3.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor tr = contract(t1,t2,{{0,0},{1,1}});
+  tr.getSlice({0},data);
+
+  EXPECT_EQ(17.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
+}
+
+TEST(Contract, ab_ab_Tensor2Transposed) {
+  Tensor t1(2,3);
+  cdouble data[9];
+  data[0] = 2.0; data[1] = 3.0; data[2] = 3.0;
+  data[3] = -1.0; data[4] = 2.0; data[5] = -4.0;
+  data[6] = 2.0; data[7] = -5.0; data[8] = -2.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,3,{1,0});
+  data[0] = 2.0; data[1] = -2.0; data[2] = 5.0;
+  data[3] = -5.0; data[4] = -1.0; data[5] = -1.0;
+  data[6] = 3.0; data[7] = 3.0; data[8] = -3.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor tr = contract(t1,t2,{{0,0},{1,1}});
+  tr.getSlice({0},data);
+
+  EXPECT_EQ(17.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
+}
+
+TEST(Contract, ab_ab_BothTransposed) {
+  Tensor t1(2,3,{1,0});
+  cdouble data[9];
+  data[0] = 2.0; data[1] = 3.0; data[2] = 3.0;
+  data[3] = -1.0; data[4] = 2.0; data[5] = -4.0;
+  data[6] = 2.0; data[7] = -5.0; data[8] = -2.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,3,{1,0});
+  data[0] = 2.0; data[1] = -2.0; data[2] = 5.0;
+  data[3] = -5.0; data[4] = -1.0; data[5] = -1.0;
+  data[6] = 3.0; data[7] = 3.0; data[8] = -3.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor tr = contract(t1,t2,{{0,0},{1,1}});
+  tr.getSlice({0},data);
+
+  EXPECT_EQ(17.0, real(data[0]));
+  EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
+}
+
 TEST(Contract, ab_bc_ca) {
   Tensor t1(2,2);
   cdouble data[4];
@@ -172,6 +235,69 @@ TEST(Contract, ab_bc_ca) {
 
   EXPECT_EQ(70.0, real(data[0]));
   EXPECT_NEAR(0.0, imag(data[0]), 1.0e-20);
+}
+
+TEST(Contract, ab_bc_Tensor1Transposed) {
+  Tensor t1(2,2,{1,0});
+  cdouble data[4];
+  data[0] = -1.0; data[1] = 0.0;
+  data[2] = 1.0; data[3] = 3.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,2);
+  data[0] = 2.0; data[1] = -2.0;
+  data[2] = 5.0; data[3] = -5.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor t3 = contract(t1,t2,{{1,0}});
+  t3.getSlice({-1,-1},data);
+
+  EXPECT_EQ(-4.0, data[0]);
+  EXPECT_EQ(-6.0, data[1]);
+  EXPECT_EQ(-10.0, data[2]);
+  EXPECT_EQ(-15.0, data[3]);
+}
+
+TEST(Contract, ab_bc_Tensor2Transposed) {
+  Tensor t1(2,2);
+  cdouble data[4];
+  data[0] = -1.0; data[1] = 0.0;
+  data[2] = 1.0; data[3] = 3.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,2,{1,0});
+  data[0] = 2.0; data[1] = -2.0;
+  data[2] = 5.0; data[3] = -5.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor t3 = contract(t1,t2,{{1,0}});
+  t3.getSlice({-1,-1},data);
+
+  EXPECT_EQ(-4.0, data[0]);
+  EXPECT_EQ(-6.0, data[1]);
+  EXPECT_EQ(-10.0, data[2]);
+  EXPECT_EQ(-15.0, data[3]);
+}
+
+TEST(Contract, ab_bc_BothTransposed) {
+  Tensor t1(2,2,{1,0});
+  cdouble data[4];
+  data[0] = -1.0; data[1] = 0.0;
+  data[2] = 1.0; data[3] = 3.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t2(2,2,{1,0});
+  data[0] = 2.0; data[1] = -2.0;
+  data[2] = 5.0; data[3] = -5.0;
+  t2.setSlice({-1,-1},data);
+
+  Tensor t3 = contract(t1,t2,{{1,0}});
+  t3.getSlice({-1,-1},data);
+
+  EXPECT_EQ(-4.0, data[0]);
+  EXPECT_EQ(-6.0, data[1]);
+  EXPECT_EQ(-10.0, data[2]);
+  EXPECT_EQ(-15.0, data[3]);
 }
 
 TEST(Contract, ab_cb_ac) {

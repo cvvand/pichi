@@ -16,8 +16,8 @@ using namespace arma;
 
 namespace pichi {
 
-int detectTranspose(const std::vector<int>& slice1,
-                    const std::vector<int>& slice2) {
+pair<bool,bool> detectTranspose(const std::vector<int>& slice1,
+                                const std::vector<int>& slice2) {
 
   /*
    * This function detects whether a slice of a tensor needs to be transposed
@@ -39,11 +39,10 @@ int detectTranspose(const std::vector<int>& slice1,
    * This function detects the relative positions of the -2 and -1  on the
    * two slices, and figures out which slices need to be transposed in order
    * to get to the correct pattern: (-2,-1) , (-1,-2).
-   * The return values are:
-   * 0 - no transposition needed (A_ab B_bc)
-   * 1 - slice 1 should be transposed (A_ba B_bc)
-   * 2 - slice 2 should be transposed (A_ab B_cb)
-   * 3 - both slices should be transposed (A_ba B_cb)
+   * The return value is a pair of booleans. The first boolean corresponds to
+   * the first tensor. If the value is true, the tensor should be transposed.
+   * If false, it should not. The same is true of the second tensor with the
+   * secodn boolean in the returned pair.
    */
 
   int i11,i12,i21,i22;
@@ -62,21 +61,25 @@ int detectTranspose(const std::vector<int>& slice1,
       i22 = i; // -2 is at position i in tensor 2
   }
   // The correct pattern is (-2 -1) , (-1 -2)    i21 < i11 && i12 < i22
+  pair<bool,bool> res;
   if (i11 > i21) {
     // No transpose on tensor 1
+    res.first = false;
     if (i22 > i12) {
       // No transpose on tensor 2
-      return 0;
+      res.second = false;
     }
     else
-      return 2;
+      res.second = true;
   } else {
     // Transpose on tensor 1
+    res.first = true;
     if (i22 > i12)
-      return 1;
+      res.second = false;
     else
-      return 3; // Both need transpose
+      res.second = true;
   }
+  return res;
 }
 
 void setStorage(Tensor& tensor, const std::vector<int> slicing) {
@@ -239,7 +242,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
 
   // Detect whether transposition is needed (sliced indices will not change
   // during iteration)
-  int transpose_type = detectTranspose(it.getSlice1(),it.getSlice2());
+  auto trans = detectTranspose(it.getSlice1(),it.getSlice2());
 
   // Containers for the data for matrix multiplication
   cdouble data1[t1.getSize()*t1.getSize()];
@@ -261,13 +264,18 @@ Tensor contract(Tensor& t1, Tensor& t2,
         do { // Loop through contracted, non-sliced indices on input tensors
 
           // Get the current slices in matrix form
-          t1.getSlice(it.getSlice1(), data1);
-          t2.getSlice(it.getSlice2(), data2);
+          bool s1 = t1.getSlice(it.getSlice1(), data1);
+          bool s2 = t2.getSlice(it.getSlice2(), data2);
+
+          // Check whether matrices should be transposed or not before
+          // multiplication
+          bool trans1 = ((trans.first && !s1) || (!trans.first && s1));
+          bool trans2 = ((trans.second && !s2) || (!trans.second && s2));
 
           cx_mat m1(data1, t1.getSize(), t1.getSize());
           cx_mat m2(data2, t2.getSize(), t2.getSize());
 
-          if (transpose_type == 0 || transpose_type == 3)
+          if ((trans1 && trans2) || (!trans1 && !trans2))
             data_out[x] += trace(m1 * m2);
           else
             data_out[x] += trace(m1.st() * m2);
@@ -310,21 +318,26 @@ Tensor contract(Tensor& t1, Tensor& t2,
       // Mult branch
 
       // Get the current slices in matrix form
-      t1.getSlice(it.getSlice1(), data1);
-      t2.getSlice(it.getSlice2(), data2);
+      bool s1 = t1.getSlice(it.getSlice1(), data1);
+      bool s2 = t2.getSlice(it.getSlice2(), data2);
+
+      // Check whether matrices should be transposed or not before
+      // multiplication
+      bool trans1 = ((trans.first && !s1) || (!trans.first && s1));
+      bool trans2 = ((trans.second && !s2) || (!trans.second && s2));
 
       cx_mat m1(data1, t1.getSize(), t1.getSize());
       cx_mat m2(data2, t2.getSize(), t2.getSize());
 
       cx_mat mout; // The output slice in matrix form.
       // Do the multiplication based on transpose type
-      if (transpose_type == 0)
+      if (!trans1 && !trans2)
         mout = m1 * m2;
-      if (transpose_type == 1)
+      else if (trans1 && !trans2)
         mout = m1.st() * m2;
-      if (transpose_type == 2)
+      else if (!trans1 && trans2)
         mout = m1 * m2.st();
-      if (transpose_type == 3)
+      else
         mout = strans(m2 * m1);
 
       // Set the slice on the output tensor
