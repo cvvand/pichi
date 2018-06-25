@@ -172,7 +172,7 @@ public:
    *
    */
   bool getSlice(const std::vector<int>&, cdouble*) const;
-  void setSlice(const std::vector<int>&, cdouble*, bool trans = false);
+  void setSlice(const std::vector<int>&, const cdouble*, bool trans = false);
 
 
   // --- Data storage ---------------------------------------------------

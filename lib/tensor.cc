@@ -279,7 +279,7 @@ bool Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
 }
 
-void Tensor::setSlice(const std::vector<int>& slice, cdouble * buff,
+void Tensor::setSlice(const std::vector<int>& slice, const cdouble * buff,
                       bool trans) {
 
   // For rank 0 tensors, simply copy the element and don't worry about the slice
