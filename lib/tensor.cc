@@ -162,6 +162,16 @@ Tensor::~Tensor() {
   delete[] data;
 }
 
+
+void Tensor::conj() {
+  int total_size = 1;
+  for (int i = 0; i < dim; ++i)
+    total_size *= n;
+  for (int i = 0; i < total_size; ++i)
+    data[i] = std::conj(data[i]);
+}
+
+
 cdouble Tensor::getElement(const std::vector<int>& index) const {
   // Translate index into offset by using storage information
   int os = 0;

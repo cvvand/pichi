@@ -306,6 +306,52 @@ TEST(TensorCopyAssignment, CopyAssign3DModifiedData) {
 }
 
 
+TEST(TensorConj, TakeConjugateAligned) {
+  Tensor t(2,2);
+  cdouble data[4] = {cdouble(1,1),cdouble(1,0),cdouble(1,-1),cdouble(2,3)};
+  t.setSlice({-1,-1},data);
+  t.conj();
+  cdouble data2[4]; t.getSlice({-1,-1},data2);
+  EXPECT_EQ(1,real(data2[0])); EXPECT_EQ(-1,imag(data2[0]));
+  EXPECT_EQ(1,real(data2[1])); EXPECT_EQ(0,imag(data2[1]));
+  EXPECT_EQ(1,real(data2[2])); EXPECT_EQ(1,imag(data2[2]));
+  EXPECT_EQ(2,real(data2[3])); EXPECT_EQ(-3,imag(data2[3]));
+}
+
+TEST(TensorConj, TakeConjugateNotAligned) {
+  Tensor t(3,2);
+  cdouble data[4] = {cdouble(1,1),cdouble(1,0),cdouble(1,-1),cdouble(2,3)};
+  t.setSlice({-1,-1,0},data);
+  cdouble data2[4] = {cdouble(0,0),cdouble(2,2),cdouble(3,0),cdouble(1,-4)};
+  t.setSlice({-1,-1,1},data2);
+  t.conj();
+  cdouble data3[4]; t.getSlice({-1,0,-1},data3);
+  EXPECT_EQ(1,real(data3[0])); EXPECT_EQ(-1,imag(data3[0]));
+  EXPECT_EQ(1,real(data3[1])); EXPECT_EQ(0,imag(data3[1]));
+  EXPECT_EQ(0,real(data3[2])); EXPECT_EQ(0,imag(data3[2]));
+  EXPECT_EQ(2,real(data3[3])); EXPECT_EQ(-2,imag(data3[3]));
+
+  t.getSlice({-1,1,-1},data3);
+  EXPECT_EQ(1,real(data3[0])); EXPECT_EQ(1,imag(data3[0]));
+  EXPECT_EQ(2,real(data3[1])); EXPECT_EQ(-3,imag(data3[1]));
+  EXPECT_EQ(3,real(data3[2])); EXPECT_EQ(0,imag(data3[2]));
+  EXPECT_EQ(1,real(data3[3])); EXPECT_EQ(4,imag(data3[3]));
+}
+
+TEST(TensorConj, TakeConjugateTwice) {
+  Tensor t(2,2);
+  cdouble data[4] = {cdouble(1,1),cdouble(1,0),cdouble(1,-1),cdouble(2,3)};
+  t.setSlice({-1,-1},data);
+  t.conj();
+  t.conj();
+  cdouble data2[4]; t.getSlice({-1,-1},data2);
+  EXPECT_EQ(1,real(data2[0])); EXPECT_EQ(1,imag(data2[0]));
+  EXPECT_EQ(1,real(data2[1])); EXPECT_EQ(0,imag(data2[1]));
+  EXPECT_EQ(1,real(data2[2])); EXPECT_EQ(-1,imag(data2[2]));
+  EXPECT_EQ(2,real(data2[3])); EXPECT_EQ(3,imag(data2[3]));
+}
+
+
 }
 
 

@@ -114,6 +114,15 @@ public:
    */
   ~Tensor() noexcept;
 
+  // --- Math ------------------------------------------------------------
+
+  /*
+   * Takes the complex conjugate of all entries in the tensor. No transpose
+   * is involved: this function simply performs the operation (a+ib) ->
+   * (a-ib) for all entries in the tensor.
+   */
+  void conj();
+
   // --- Data ------------------------------------------------------------
 
   /*
