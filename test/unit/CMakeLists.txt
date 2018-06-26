@@ -52,6 +52,7 @@ add_executable(all_ut
         test_double_slice_iterator.cc
         test_extract.cc
         test_graph.cc
+        test_graph_split.cc
         test_identify.cc
         test_single_slice_iterator.cc
         test_string_utils.cc

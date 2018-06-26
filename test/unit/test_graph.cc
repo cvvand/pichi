@@ -10,20 +10,27 @@ using namespace std;
 
 namespace {
 
+TEST(Graph, DefaultConstructorMakesEmptyGraph) {
+  Graph g;
+  ASSERT_EQ(0, g.getNodes().size());
+}
+
 TEST(Graph, CreateGraphWithOneNode) {
 
   Graph g("0aa");
-  ASSERT_EQ(1, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
+  auto s = g.getNodes();
+  ASSERT_EQ(1, s.size());
+  EXPECT_NE(s.find(0) , s.end());
 
 }
 
 TEST(Graph, CreateGraphWithTwoNodes) {
 
   Graph g("0ab2ab");
-  ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(2, g.getNodes()[1]);
+  auto s = g.getNodes();
+  ASSERT_EQ(2, s.size());
+  EXPECT_NE(s.find(0) , s.end());
+  EXPECT_NE(s.find(2) , s.end());
 
 }
 
@@ -90,11 +97,18 @@ TEST(Graph, OpenNode) {
 
 }
 
+TEST(Graph, DontAcceptDuplicateNode) {
+  Graph g("1ab2bc");
+  EXPECT_THROW(g.addNode(1,2), invalid_argument);
+}
+
 TEST(Graph, AddNodeWithTwoOpenConnections) {
   Graph g("0ab1bc");
   g.addNode(4, 2);
-  ASSERT_EQ(3, g.getNodes().size());
-  ASSERT_EQ(4, g.getNodes()[2]);
+
+  auto s = g.getNodes();
+  ASSERT_EQ(3, s.size());
+  ASSERT_NE(s.find(4),s.end());
   vector<pair<int,int>> c = g.connections(4);
   ASSERT_EQ(2, c.size());
   EXPECT_EQ(make_pair(-1,-1), c[0]);
@@ -106,17 +120,20 @@ TEST(Graph, RemoveNodeWithTwoOpenConnections) {
   g.addNode(4, 2);
   ASSERT_EQ(3, g.getNodes().size());
   g.removeNode(4);
-  ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(1, g.getNodes()[1]);
+  auto s = g.getNodes();
+  ASSERT_EQ(2, s.size());
+  EXPECT_NE(s.find(0), s.end());
+  EXPECT_NE(s.find(1), s.end());
+  EXPECT_EQ(s.find(4), s.end());
 }
 
 TEST(Graph, RemoveNodeWithTwoConnections) {
   Graph g("0ab1bc2ca");
   g.removeNode(1);
-  ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(2, g.getNodes()[1]);
+  auto s = g.getNodes();
+  ASSERT_EQ(2, s.size());
+  EXPECT_NE(s.find(0), s.end());
+  EXPECT_NE(s.find(2), s.end());
 
   vector<pair<int,int>> c = g.connections(0);
   EXPECT_EQ(make_pair(2,1), c[0]);
@@ -195,11 +212,11 @@ TEST(GraphCopyConstructor, CopyNodesAndConnections) {
   g.addNode(3, 3);
   g.connect(1,2,2,2);
 
-  vector<int> nodes = h.getNodes();
+  auto nodes = h.getNodes();
   ASSERT_EQ(3, nodes.size());
-  EXPECT_EQ(0, nodes[0]);
-  EXPECT_EQ(1, nodes[1]);
-  EXPECT_EQ(2, nodes[2]);
+  EXPECT_NE(nodes.find(0), nodes.end());
+  EXPECT_NE(nodes.find(1), nodes.end());
+  EXPECT_NE(nodes.find(2), nodes.end());
 
   vector<pair<int,int>> c = h.connections(0);
   ASSERT_EQ(2, c.size());
@@ -220,15 +237,60 @@ TEST(GraphCopyConstructor, CopyNodesAndConnections) {
 }
 
 
+TEST(GraphCompare, EmptyGraphsEqual) {
+  Graph g1; Graph g2;
+  EXPECT_TRUE(g1 == g2);
+  EXPECT_FALSE(g1 != g2);
+  EXPECT_FALSE(g1 < g2);
+  EXPECT_FALSE(g1 > g2);
+  EXPECT_TRUE(g1 <= g2);
+  EXPECT_TRUE(g1 >= g2);
+}
+
+TEST(GraphCompare, MoreNodesGreaterThanFewerNodes) {
+  Graph g1("1ab"); Graph g2;
+  EXPECT_FALSE(g1 == g2);
+  EXPECT_TRUE(g1 != g2);
+  EXPECT_FALSE(g1 < g2);
+  EXPECT_TRUE(g1 > g2);
+  EXPECT_FALSE(g1 <= g2);
+  EXPECT_TRUE(g1 >= g2);
+}
+
+TEST(GraphCompare, HighValueNodesGreaterThanSmallValueNodes) {
+  Graph g1("1ab"); Graph g2("2ab");
+  EXPECT_FALSE(g1 == g2);
+  EXPECT_TRUE(g1 != g2);
+  EXPECT_TRUE(g1 < g2);
+  EXPECT_FALSE(g1 > g2);
+  EXPECT_TRUE(g1 <= g2);
+  EXPECT_FALSE(g1 >= g2);
+}
+
+TEST(GraphCompare, SameNodeOneClosedOneOpen) {
+  Graph g1("1ab"); Graph g2("1aa");
+  EXPECT_FALSE(g1 == g2);
+  EXPECT_TRUE(g1 != g2);
+  EXPECT_TRUE(g1 < g2);
+  EXPECT_FALSE(g1 > g2);
+  EXPECT_TRUE(g1 <= g2);
+  EXPECT_FALSE(g1 >= g2);
+}
+
+
+
+
+
 TEST(GraphReduce, ReduceThreeRank2NodesToTwoRankTwoNodes) {
   Graph g("0ab1bc2ac");
   Graph h("1ab2cb");
 
   ASSERT_TRUE(g.reduce(h, 3));
 
-  ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(3, g.getNodes()[1]);
+  auto s = g.getNodes();
+  ASSERT_EQ(2, s.size());
+  EXPECT_NE(s.find(0), s.end());
+  EXPECT_NE(s.find(3), s.end());
 
   vector<pair<int,int>> c = g.connections(0);
 
@@ -244,40 +306,17 @@ TEST(GraphReduce, ReduceThreeRank2NodesToTwoRankTwoNodes) {
 
 }
 
-TEST(GraphReduce, ReduceThreeRank2NodesToTwoInOppositeOrder) {
-  Graph g("0ab1bc2ac");
-  Graph h("2ab1cb");
-
-  ASSERT_TRUE(g.reduce(h, 4));
-
-  ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(4, g.getNodes()[1]);
-
-  vector<pair<int,int>> c = g.connections(0);
-
-  ASSERT_EQ(2, c.size());
-  EXPECT_EQ(make_pair(4,0), c[0]);
-  EXPECT_EQ(make_pair(4,1), c[1]);
-
-  c = g.connections(4);
-
-  ASSERT_EQ(2, c.size());
-  EXPECT_EQ(make_pair(0,0), c[0]);
-  EXPECT_EQ(make_pair(0,1), c[1]);
-
-}
-
 TEST(GraphReduce, DontReduceIfGraphIsNotThere) {
   Graph g("0ab1bc2ac");
   Graph h("3ab1cb");
 
   ASSERT_FALSE(g.reduce(h, 4));
 
-  ASSERT_EQ(3, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(1, g.getNodes()[1]);
-  EXPECT_EQ(2, g.getNodes()[2]);
+  auto s = g.getNodes();
+  ASSERT_EQ(3, s.size());
+  EXPECT_NE(s.find(0), s.end());
+  EXPECT_NE(s.find(1), s.end());
+  EXPECT_NE(s.find(2), s.end());
 
 }
 
@@ -287,9 +326,10 @@ TEST(GraphReduce, ReduceGraphWithOpenConnections) {
 
   ASSERT_TRUE(g.reduce(h, 3));
 
+  auto s = g.getNodes();
   ASSERT_EQ(2, g.getNodes().size());
-  EXPECT_EQ(0, g.getNodes()[0]);
-  EXPECT_EQ(3, g.getNodes()[1]);
+  EXPECT_NE(s.find(0), s.end());
+  EXPECT_NE(s.find(3), s.end());
 
   vector<pair<int,int>> c = g.connections(0);
 
@@ -313,7 +353,7 @@ TEST(GraphReduce, ReduceSingleRank2NodeToSingleRank0Node) {
   ASSERT_TRUE(g.reduce(h, 3));
 
   ASSERT_EQ(1, g.getNodes().size());
-  EXPECT_EQ(3, g.getNodes()[0]);
+  EXPECT_NE(g.getNodes().find(3), g.getNodes().end());
 
   vector<pair<int,int>> c = g.connections(3);
 
@@ -328,12 +368,18 @@ TEST(GraphReduce, ReduceTwoRank2NodesToSingleRank0Node) {
   ASSERT_TRUE(g.reduce(h, 3));
 
   ASSERT_EQ(1, g.getNodes().size());
-  EXPECT_EQ(3, g.getNodes()[0]);
+  EXPECT_NE(g.getNodes().find(3), g.getNodes().end());
 
   vector<pair<int,int>> c = g.connections(3);
 
   ASSERT_EQ(0, c.size());
 
+}
+
+TEST(GraphReduce, DontReduceWithDuplicateName) {
+  Graph g("0ab1bc2ac");
+  Graph h("0ab1bc");
+  EXPECT_THROW(g.reduce(h,2), invalid_argument);
 }
 
 

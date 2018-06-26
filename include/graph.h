@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <set>
 
 namespace pichi {
 
@@ -52,6 +53,11 @@ class Graph {
 
 public:
   /*
+   * Creates an empty graph with no nodes.
+   */
+  Graph();
+
+  /*
    * Creates a graph from a string representation.
    * A possible input could be
    * "10abc23db39acd"
@@ -70,6 +76,8 @@ public:
    */
   Graph(const Graph&);
 
+
+
   /*
    * Add a named node to the graph with a given number of open connections.
    */
@@ -84,7 +92,7 @@ public:
   /*
    * Gets a list of all the nodes in the graph
    */
-  std::vector<int> getNodes() const;
+  std::set<int> getNodes() const;
 
   /*
    * Connects two nodes of a graph using the indicated connections. If the
@@ -127,14 +135,40 @@ public:
    */
   bool reduce(const Graph& graph, int replacement);
 
+  /*
+   * Splits the graph into a list of connected graphs. This has no effect on
+   * the calling graph, and if the graph is already completely connected, the
+   * only element in the output list will be a copy of the calling graph.
+   */
+  std::set<Graph> splitToConnected() const;
+
+  /*
+   * Comparison operators
+   */
+  bool operator==(const Graph& rhs) const;
+  bool operator!=(const Graph& rhs) const {
+    return !operator==(rhs);
+  }
+  bool operator<(const Graph& rhs) const;
+  bool operator>(const Graph& rhs) const {
+    return rhs.operator<(*this);
+  }
+  bool operator<=(const Graph& rhs) const {
+    return !operator>(rhs);
+  }
+  bool operator>=(const Graph& rhs) const {
+    return !operator<(rhs);
+  }
+
 private:
   /*
    * List of all nodes and connections
    */
-  std::vector<int> nodes;
+  std::set<int> nodes;
   std::map<int,std::vector<std::pair<int,int>>> conn;
 
 };
+
 
 
 }

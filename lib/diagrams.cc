@@ -34,7 +34,7 @@ int identifyDiagram(const Graph& graph) {
   if (nodes2 == 2 && nodes3 == 2) {
     // This can be both diagram 6 and 7
     // We start by getting the first node in the graph
-    vector<pair<int,int>> c0 = graph.connections(graph.getNodes()[0]);
+    vector<pair<int,int>> c0 = graph.connections(*graph.getNodes().begin());
     if (c0.size() == 2) {
       // The first node has two connections. If one of them is to another
       // node with two connections, its a diagram 6. Otherwise it's 7.
@@ -70,13 +70,13 @@ Graph extract(const Graph& graph, int diagram) {
 
     case 2: {
       // simply remove the first node
-      ext.removeNode(ext.getNodes()[0]);
+      ext.removeNode(*ext.getNodes().begin());
       break;
     }
 
     case 3: {
       // Remove the first node and its first connection
-      int node1 = ext.getNodes()[0];
+      int node1 = *ext.getNodes().begin();
       int node2 = ext.connections(node1)[0].first;
       ext.removeNode(node1);
       ext.removeNode(node2);
@@ -106,7 +106,7 @@ Graph extract(const Graph& graph, int diagram) {
 
     case 7: {
       // We remove the first node
-      int node1 = graph.getNodes()[0];
+      int node1 = *ext.getNodes().begin();
       ext.removeNode(node1);
       // If the first node has two connections, remove the first connected node
       if (graph.connections(node1).size() == 2) {
@@ -127,7 +127,7 @@ Graph extract(const Graph& graph, int diagram) {
 
     case 8: {
       // Remove the first node and the node connected to it with two connections
-      int node1 = graph.getNodes()[0];
+      int node1 = *ext.getNodes().begin();
       ext.removeNode(node1);
       int nodex, nodey;
       int cx = 0;

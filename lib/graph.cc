@@ -9,6 +9,8 @@ using namespace std;
 
 namespace pichi {
 
+Graph::Graph() = default;
+
 Graph::Graph(const string& pattern) {
 
   // Iterate through nodes in the graph pattern
@@ -21,7 +23,7 @@ Graph::Graph(const string& pattern) {
 
     int name = stoi(node.substr(0,idx));
     string indices = node.substr(idx);
-    nodes.push_back(name);
+    nodes.insert(name);
 
     // We use (-1,-1) for an open connection
     vector<pair<int,int>> node_conns(indices.size(), make_pair(-1,-1));
@@ -69,7 +71,8 @@ Graph::Graph(const Graph& other) {
 }
 
 void Graph::addNode(int name, int connections) {
-  nodes.push_back(name);
+  if(!nodes.insert(name).second)
+    throw invalid_argument("Node " + to_string(name) + " was already inserted");
   // The node is initialised with open connections (-1,-1)
   vector<pair<int,int>> conns(connections, make_pair(-1,-1));
   conn.insert(make_pair(name, conns));
@@ -86,10 +89,10 @@ void Graph::removeNode(int name) {
 
   // Erase the node from data structures.
   conn.erase(name);
-  nodes.erase( remove(nodes.begin(), nodes.end(), name));
+  nodes.erase(name);
 }
 
-vector<int> Graph::getNodes() const {
+set<int> Graph::getNodes() const {
   return nodes;
 }
 
@@ -170,6 +173,26 @@ bool Graph::reduce(const Graph& graph, int replacement) {
 
   return true;
 
+}
+
+set<Graph> Graph::splitToConnected() const {
+  set<Graph> r;
+  r.insert(*this);
+  return r;
+}
+
+bool Graph::operator==(const pichi::Graph& rhs) const {
+  if (nodes == rhs.nodes)
+    return conn == rhs.conn;
+  else
+    return false;
+}
+
+bool Graph::operator<(const pichi::Graph& rhs) const {
+  if (nodes == rhs.nodes)
+    return conn < rhs.conn;
+  else
+    return nodes < rhs.nodes;
 }
 
 }
