@@ -140,7 +140,7 @@ public:
    * the calling graph, and if the graph is already completely connected, the
    * only element in the output list will be a copy of the calling graph.
    */
-  std::set<Graph> splitToConnected() const;
+  std::vector<Graph> splitToConnected() const;
 
   /*
    * Comparison operators

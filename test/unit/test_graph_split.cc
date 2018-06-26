@@ -12,11 +12,21 @@ namespace {
 
 TEST(GraphSplit, ConnectedGraphReturnCopy) {
   Graph g("1ab2ab");
-  set<Graph> r = g.splitToConnected();
+  vector<Graph> r = g.splitToConnected();
 
   ASSERT_EQ(1, r.size());
 
-  EXPECT_NE(r.find(Graph("1gh2gh")), r.end());
+  EXPECT_EQ(r[0], Graph("1gh2gh"));
+}
+
+TEST(GraphSplit, TwoDisconnectedSingleNodeGraphs) {
+  Graph g("1aa2bc");
+  vector<Graph> r = g.splitToConnected();
+
+  ASSERT_EQ(2, r.size());
+
+  EXPECT_EQ(r[0], Graph("1bb"));
+  EXPECT_EQ(r[1], Graph("2bc"));
 }
 
 }

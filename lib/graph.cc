@@ -1,4 +1,5 @@
 #include <vector>
+#include <queue>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -175,9 +176,51 @@ bool Graph::reduce(const Graph& graph, int replacement) {
 
 }
 
-set<Graph> Graph::splitToConnected() const {
-  set<Graph> r;
-  r.insert(*this);
+vector<Graph> Graph::splitToConnected() const {
+  vector<Graph> r; // Result, will contain all the connected subgraphs
+  set<int> not_assigned; // Set of nodes not yet assigned to any graph
+  queue<int> q; // Queue of nodes waiting to be inserted into this graph
+
+  // Initiate all nodes as unassigned
+  for (int n : nodes)
+    not_assigned.insert(n);
+
+  while (!not_assigned.empty()) {
+    // Create new empty graph
+    Graph g;
+
+    // Insert next unassigned node in the queue
+    int start_node = *not_assigned.begin();
+    g.addNode(start_node,0); // Dummy-value for number of connections.
+    not_assigned.erase(start_node);
+    q.push(start_node);
+
+    while (!q.empty()) {
+
+      int node = q.front();
+      q.pop();
+
+      // Go through connections, add to graph and assign to queue
+      vector<pair<int,int>> connections = conn.at(node);
+      for (pair<int,int> c : connections) {
+        if (not_assigned.find(c.first) != not_assigned.end()) {
+          // First time we see this node: add and move to queue
+          g.addNode(c.first,0);
+          not_assigned.erase(c.first);
+          q.push(c.first);
+        }
+      }
+
+      // Add connections
+      g.conn[node] = connections;
+
+    }
+
+    // No more nodes in queue. The graph is done.
+    r.push_back(g);
+
+  }
+
   return r;
 }
 
