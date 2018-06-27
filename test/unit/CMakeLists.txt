@@ -46,6 +46,7 @@ endif()
 # --- Tests ----------------------------------------------------------------
 
 add_executable(all_ut
+        test_compute.cc
         test_contract.cc
         test_contract_errors.cc
         test_contraction_storage_rules.cc

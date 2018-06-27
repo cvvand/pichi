@@ -1,5 +1,6 @@
 #include <vector>
 #include <queue>
+#include <set>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -122,6 +123,34 @@ void Graph::connect(int node1, int conn1, int node2, int conn2) {
 
 vector<pair<int,int>> Graph::connections(int node) const {
   return conn.at(node);
+}
+
+set<pair<pair<int,int>,pair<int,int>>> Graph::allConnections() const {
+
+  // Result container to be filled
+  set<pair<pair<int,int>,pair<int,int>>> r;
+
+  // We browse through all nodes and all connections of all the nodes. When
+  // we find a node with a connection to another node. We make a connection
+  // to that node if
+  // a) The connection is to another node with a higher value
+  // b) The connection is to the same node with a higher index
+  // This way we avoid duplication
+
+  for (int node : nodes) {
+    for (int i = 0; i < conn.at(node).size(); ++i) {
+      pair<int,int> c = conn.at(node)[i];
+      if (node < c.first) {
+        r.insert(make_pair(make_pair(node,i),c));
+      }
+      else if (node == c.first && i < c.second) {
+        r.insert(make_pair(make_pair(node,i),c));
+      }
+    }
+  }
+
+  return r;
+
 }
 
 bool Graph::contains(const Graph& other) const {

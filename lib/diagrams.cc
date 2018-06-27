@@ -1,5 +1,8 @@
+#include <iostream>
+#include <armadillo>
 #include "diagrams.h"
 #include "graph.h"
+#include "contraction.h"
 
 using namespace std;
 
@@ -154,6 +157,74 @@ Graph extract(const Graph& graph, int diagram) {
   return ext;
 }
 
+
+cdouble compute(const Graph& graph, std::vector<Tensor>& tensors) {
+  cdouble res = 0.0;
+
+  for (Graph& g : graph.splitToConnected()) {
+    Graph red(g); // Working copy of the graph
+
+    vector<Tensor> temps; // Storage of temporary tensors
+    int idx = tensors.size(); // Keeps track of how many tensors we have.
+
+    // We are done when the reduced graph has one node with no connections
+    while (!( (red.getNodes().size()==1) &&
+              (red.connections(*red.getNodes().begin()).empty()) )) {
+
+      // Extract an optimal subdiagram
+      Graph ext = extract(red, identifyDiagram(red));
+
+      // Do the contractions based on the extracted diagram
+      Tensor tout;
+      vector<pair<int,int>> contractions;
+      if (ext.getNodes().size() == 1) {
+        // Extracted diagram has one node
+
+        int tidx = *ext.getNodes().begin();
+        for (auto c : ext.allConnections()) {
+          contractions.push_back(make_pair(c.first.second,c.second.second));
+        }
+        tout = contract(tensors[tidx], contractions); // Tetraquark ERROR
+
+      }
+      else {
+        // Extracted diagram has two nodes
+
+        auto it = ext.getNodes().begin();
+        Tensor* t1;
+        if (*it < tensors.size())
+          t1 = &tensors[*it];
+        else
+          t1 = &temps[*it - tensors.size()];
+
+        it++;
+        Tensor* t2;
+        if (*it < tensors.size())
+          t2 = &tensors[*it];
+        else
+          t2 = &temps[*it - tensors.size()];
+
+        for (auto c : ext.allConnections()) {
+          contractions.push_back(make_pair(c.first.second,c.second.second));
+        }
+        tout = contract(*t1,*t2, contractions);
+
+      }
+
+      // Put the newly calculated tensor into the temporary array
+      temps.push_back(tout);
+      // Reduce the graph
+      red.reduce(ext, idx++);
+
+    }
+
+    // Diagram is done. The result is the last inserted tensor(scalar)
+    cdouble r[1]; temps[idx-tensors.size()-1].getSlice({0},r);
+    res += r[0];
+
+  }
+  return res;
+}
 
 
 }

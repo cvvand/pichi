@@ -171,6 +171,26 @@ TEST(Graph, ConnectConnectedNodes) {
 
 }
 
+TEST(Graph, AllConnectionsEmptyOnNonConnectedGraph) {
+  Graph g("1ab");
+  EXPECT_TRUE(g.allConnections().empty());
+}
+
+TEST(Graph, SingleConnectionInGraphWithOneNodeConnectedToItself) {
+  Graph g("1aa");
+  auto s = g.allConnections();
+  ASSERT_EQ(1, s.size());
+  EXPECT_NE(s.find(make_pair(make_pair(1,0),make_pair(1,1))), s.end());
+}
+
+TEST(Graph, SingleConnectionInGraphWithTwoNodesConnectedAtSameIndex) {
+  Graph g("1ab2cb");
+  auto s = g.allConnections();
+  ASSERT_EQ(1, s.size());
+  EXPECT_NE(s.find(make_pair(make_pair(1,1),make_pair(2,1))), s.end());
+}
+
+
 TEST(GraphContains, FailOnMissingNode) {
   Graph g1("3ab12ab");
   Graph g2("4ab");
@@ -235,6 +255,7 @@ TEST(GraphCopyConstructor, CopyNodesAndConnections) {
   EXPECT_EQ(make_pair(1,1), c[1]);
   EXPECT_EQ(make_pair(-1,-1), c[2]);
 }
+
 
 
 TEST(GraphCompare, EmptyGraphsEqual) {

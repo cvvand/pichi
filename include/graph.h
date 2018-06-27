@@ -111,6 +111,14 @@ public:
   std::vector<std::pair<int,int>> connections(int node) const;
 
   /*
+   * Gets all the connections in the graph. Each connection is represented by
+   * a pair of pairs of integers. The first pair in the connection is (node1,
+   * index1), the second pair being (node2,index2).
+   */
+  std::set<std::pair<std::pair<int,int>,std::pair<int,int>>>
+      allConnections() const;
+
+  /*
    * Checks whether a graph contains another graph.
    * A graph h is contained in another graph g, if all the nodes of h also
    * exist in g, and if any non-open connection between two nodes in h is
