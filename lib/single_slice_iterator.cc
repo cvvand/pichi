@@ -1,7 +1,7 @@
 
 #include <stdexcept>
 #include <unordered_set>
-#include "tensor.h"
+#include "pichi/tensor.h"
 #include "slice_iterator.h"
 
 using namespace std;

@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
-#include "diagrams.h"
-#include "tensor.h"
+#include "pichi/pichi.h"
 
 /*
  * Unit tests of the splitToConnected function defined in Graph.cc
@@ -85,43 +84,48 @@ protected:
 };
 
 TEST_F(ComputeTest, Diagram0) {
-  EXPECT_EQ(1.0, compute(Graph("0aa"),tensors));
-}
-
-TEST_F(ComputeTest, TwoTimesDiagram0) {
-  EXPECT_EQ(-2.0, compute(Graph("0aa1bb"),tensors));
+  cdouble r[1]; contract(Graph("0aa"),tensors).getSlice({0},r);
+  EXPECT_EQ(1.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram1) {
-  EXPECT_EQ(18.0, compute(Graph("0ab1ab"),tensors));
+  cdouble r[1]; contract(Graph("0ab1ab"),tensors).getSlice({0},r);
+  EXPECT_EQ(18.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram2) {
-  EXPECT_EQ(57.0, compute(Graph("0ab2bc1ac"),tensors));
+  cdouble r[1]; contract(Graph("0ab2bc1ac"),tensors).getSlice({0},r);
+  EXPECT_EQ(57.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram3) {
-  EXPECT_EQ(-102.0, compute(Graph("0ab2dc1ac3bd"),tensors));
+  cdouble r[1]; contract(Graph("0ab2dc1ac3bd"),tensors).getSlice({0},r);
+  EXPECT_EQ(-102.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram4) {
-  EXPECT_EQ(8.0, compute(Graph("4abc5abc"),tensors));
+  cdouble r[1]; contract(Graph("4abc5abc"),tensors).getSlice({0},r);
+  EXPECT_EQ(8.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram5) {
-  EXPECT_EQ(16.0, compute(Graph("4bdc5abc2da"),tensors));
+  cdouble r[1]; contract(Graph("4bdc5abc2da"),tensors).getSlice({0},r);
+  EXPECT_EQ(16.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram6) {
-  EXPECT_EQ(373.0, compute(Graph("4abd7abe0df3ef"),tensors));
+  cdouble r[1]; contract(Graph("4abd7abe0df3ef"),tensors).getSlice({0},r);
+  EXPECT_EQ(373.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram7) {
-  EXPECT_EQ(-32.0, compute(Graph("4abc5dbe2ae1cd"),tensors));
+  cdouble r[1]; contract(Graph("4abc5dbe2ae1cd"),tensors).getSlice({0},r);
+  EXPECT_EQ(-32.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram8) {
-  EXPECT_EQ(-499.0, compute(Graph("4adc5aec7efg6fgd"),tensors));
+  cdouble r[1]; contract(Graph("4adc5aec7efg6fgd"),tensors).getSlice({0},r);
+  EXPECT_EQ(-499.0, r[0]);
 }
 
 }

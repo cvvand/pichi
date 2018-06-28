@@ -4,9 +4,7 @@
  *
  */
 
-#include "tensor.h"
-#include "contraction.h"
-#include "diagrams.h"
+#include "pichi/pichi.h"
 
 #include <random>
 #include <iostream>

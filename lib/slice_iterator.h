@@ -2,7 +2,7 @@
 #define PICHI_SLICE_ITERATOR_H
 
 #include <vector>
-#include "tensor.h"
+#include "pichi/tensor.h"
 
 namespace pichi {
 

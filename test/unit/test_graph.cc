@@ -1,4 +1,4 @@
-#include "graph.h"
+#include "pichi/graph.h"
 #include "gtest/gtest.h"
 
 /*

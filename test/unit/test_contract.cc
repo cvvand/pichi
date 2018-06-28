@@ -1,4 +1,4 @@
-#include "contraction.h"
+#include "pichi/contraction.h"
 #include "gtest/gtest.h"
 
 /*

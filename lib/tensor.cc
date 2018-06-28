@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <unordered_set>
-#include "tensor.h"
+#include "pichi/tensor.h"
 
 using namespace std;
 

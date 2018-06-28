@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
-#include "graph.h"
+#include "pichi/graph.h"
 #include "string_utils.h"
 
 using namespace std;

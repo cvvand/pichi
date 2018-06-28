@@ -2,6 +2,7 @@
 #define PICHI_CONTRACTION_H
 
 #include "tensor.h"
+#include "graph.h"
 #include <unordered_map>
 #include <queue>
 
@@ -13,7 +14,7 @@ namespace pichi {
  *
  * A contraction is a unary or binary tensor operation, in which one or more
  * indices on the input tensors are contracted in order to create a single
- * output tensor which has fewer combined indices or a number (no indices). A
+ * output tensor which has fewer combined indices or a scalar (no indices). A
  * simple example is matrix-matrix multiplication, which is the contraction
  * of a single index on two rank two tensors, creating a new rank two tensor.
  * Another example is the trace operation, which is a unary operation on a
@@ -55,6 +56,19 @@ Tensor contract(Tensor& tensor,
  */
 Tensor contract(Tensor& tensor1, Tensor& tensor2,
                 const std::vector<std::pair<int, int>>& idx);
+
+/*
+ * Compute a completely contracted, known diagram, represented by a graph.
+ * The graph nodes and the position of the corresponding tensor in the input
+ * tensor array must be equal.
+ * EXAMPLE: Compute the diagram 0_ab 1_acd 2_cdb
+ * The input tensor array must contain three tensors, the first of which is
+ * rank two and the two next being rank 3. The graph must correspond to the
+ * diagram (constructed for example by Graph("0ab1acd2cdb")).
+ * If the diagram is not connected the result will be the sum of the
+ * connected parts.
+ */
+Tensor contract(const Graph&, std::vector<Tensor>&);
 
 
 }

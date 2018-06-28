@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "tensor.h"
+#include "pichi/tensor.h"
 
 /*
  * Unit tests of the tensor class, implemented in TENSOR.CC

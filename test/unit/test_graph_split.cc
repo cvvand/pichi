@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "graph.h"
+#include "pichi/graph.h"
 
 /*
  * Unit tests of the splitToConnected function defined in Graph.cc
