@@ -7,8 +7,18 @@ set(CMAKE_CXX_STANDARD 11)
 # --- Armadillo ----------------------------------------------------
 
 
-find_package(Armadillo REQUIRED)
-include_directories(${ARMADILLO_INCLUDE_DIRS})
+set(ARMA_PATH "default" CACHE STRING "Path to Armadillo")
+if(ARMA_PATH STREQUAL "default")
+  # If Armadillo is in standard position, just load it
+  find_package(Armadillo REQUIRED)
+  include_directories(${ARMADILLO_INCLUDE_DIRS})
+else()
+  # Set custom include and link directories
+  include_directories(${ARMA_PATH}/include)
+  link_directories(${ARMA_PATH}/lib)
+  # Set the correct value of the Armadillo libs
+  set(ARMADILLO_LIBRARIES armadillo)
+endif()
 
 
 # --- BLAS ---------------------------------------------------------
