@@ -41,6 +41,11 @@ add_library(pichi
         lib/tensor.cc
         )
 
+target_include_directories(pichi PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        PRIVATE lib)
+
 target_link_libraries(pichi
         ${ARMADILLO_LIBRARIES})
 
