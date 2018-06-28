@@ -7,18 +7,8 @@ set(CMAKE_CXX_STANDARD 11)
 # --- Armadillo ----------------------------------------------------
 
 
-set(ARMA_PATH "default" CACHE STRING "Path to Armadillo")
-if(ARMA_PATH STREQUAL "default")
-  # If Armadillo is in standard position, just load it
-  find_package(Armadillo REQUIRED)
-  include_directories(${ARMADILLO_INCLUDE_DIRS})
-else()
-  # Set custom include and link directories
-  include_directories(${ARMA_PATH}/include)
-  link_directories(${ARMA_PATH}/lib)
-  # Set the correct value of the Armadillo libs
-  set(ARMADILLO_LIBRARIES armadillo)
-endif()
+find_package(Armadillo REQUIRED)
+include_directories(${ARMADILLO_INCLUDE_DIRS})
 
 
 # --- BLAS ---------------------------------------------------------
@@ -29,8 +19,27 @@ endif()
 # --- PICHI --------------------------------------------------------
 
 include_directories(include)
-include_directories(include/laph)
-add_subdirectory(lib)
+
+# Collect all the code into a library
+add_library(pichi
+        lib/contraction.cc
+        lib/diagrams.cc
+        lib/double_slice_iterator.cc
+        lib/graph.cc
+        lib/single_slice_iterator.cc
+        lib/string_utils.cc
+        lib/tensor.cc
+        )
+
+target_include_directories(pichi PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        PRIVATE lib)
+
+target_link_libraries(pichi
+        ${ARMADILLO_LIBRARIES})
+
+export(TARGETS pichi FILE pichiConfig.cmake)
 
 
 # --- Testing -------------------------------------------------------

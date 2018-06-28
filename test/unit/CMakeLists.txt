@@ -64,7 +64,7 @@ add_executable(all_ut
 target_link_libraries(all_ut
         gtest_main
         pichi
-        ${ARMADILLO_LIBRARIES}
+        #${ARMADILLO_LIBRARIES}
         #${BLAS_LIBRARIES}
         )
 add_test(NAME unit_tests COMMAND all_ut)
