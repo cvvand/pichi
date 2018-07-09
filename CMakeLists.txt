@@ -55,8 +55,6 @@ install(TARGETS pichi EXPORT pichiConfig
 install(DIRECTORY include/ DESTINATION include)
 install(EXPORT pichiConfig DESTINATION share/cmake)
 
-#export(TARGETS pichi FILE pichiConfig.cmake)
-
 # --- Benchmarks ----------------------------------------------------
 option(MAKE_BENCHMARKS
         "Build benchmark tests" OFF )
