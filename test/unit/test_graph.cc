@@ -225,6 +225,22 @@ TEST(GraphContains, ComplicatedTest) {
   EXPECT_FALSE(g1.contains(g4));
 }
 
+TEST(GraphToString, NoNodesGivesEmptyString) {
+  Graph g1;
+  EXPECT_EQ("", g1.toString());
+}
+
+TEST(GraphToString, SingleNodeConnectedToSelf) {
+  Graph g1("1aa");
+  EXPECT_EQ("1:(1,1)(1,0) ", g1.toString());
+}
+
+TEST(GraphToString, TwoNodesWithOpenConnections) {
+  Graph g1("1ab2cdb");
+  EXPECT_EQ("1:(-1,-1)(2,2) 2:(-1,-1)(-1,-1)(1,1) ", g1.toString());
+}
+
+
 TEST(GraphCopyConstructor, CopyNodesAndConnections) {
   Graph g("0ab1acd2bce");
   Graph h(g);
@@ -400,7 +416,7 @@ TEST(GraphReduce, ReduceTwoRank2NodesToSingleRank0Node) {
 TEST(GraphReduce, DontReduceWithDuplicateName) {
   Graph g("0ab1bc2ac");
   Graph h("0ab1bc");
-  EXPECT_THROW(g.reduce(h,2), invalid_argument);
+  EXPECT_THROW(g.reduce(h, 2), invalid_argument);
 }
 
 

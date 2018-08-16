@@ -253,6 +253,18 @@ vector<Graph> Graph::splitToConnected() const {
   return r;
 }
 
+string Graph::toString() {
+  string s;
+  for (auto n : conn) {
+    s += to_string(n.first) + ":";
+    for (auto c : n.second) {
+      s += "(" + to_string(c.first) + "," + to_string(c.second) + ")";
+    }
+    s += " ";
+  }
+  return s;
+}
+
 bool Graph::operator==(const pichi::Graph& rhs) const {
   if (nodes == rhs.nodes)
     return conn == rhs.conn;

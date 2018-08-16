@@ -63,7 +63,9 @@ int identifyDiagram(const Graph& graph) {
       return 7;
     }
   }
-  return 8;
+  if (nodes3 == 4)
+    return 8;
+  return -1;
 }
 
 Graph extract(const Graph& graph, int diagram) {

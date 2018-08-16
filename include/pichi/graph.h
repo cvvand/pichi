@@ -151,6 +151,15 @@ public:
   std::vector<Graph> splitToConnected() const;
 
   /*
+   * Gives a string representation of the graph.
+   * For example, the graph instantiated by "1ab2bcd3acd" would have the
+   * representation
+   *    "1:(3,0)(2,0) 2:(1,1)(3,1)(3,2) 3:(1,0)(2,1)(2,2)"
+   * Open connections are represented by "-1".
+   */
+  std::string toString();
+
+  /*
    * Comparison operators
    */
   bool operator==(const Graph& rhs) const;

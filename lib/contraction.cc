@@ -399,6 +399,10 @@ Tensor contract(const Graph& graph, std::vector<Tensor>& tensors) {
             (red.connections(*red.getNodes().begin()).empty()) )) {
 
     // Extract an optimal subdiagram
+    int diag = identifyDiagram(red);
+    if (diag == -1) { // Unknown diagram
+      throw invalid_argument("Unknown diagram: " + red.toString());
+    }
     Graph ext = extract(red, identifyDiagram(red));
 
     // Do the contractions based on the extracted diagram

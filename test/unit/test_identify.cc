@@ -55,4 +55,9 @@ TEST(IdentifyDiagram, Diagram8) {
   EXPECT_EQ(8, identifyDiagram(g));
 }
 
+TEST(IdentifyDiagram, UnknownDiagram) {
+  Graph g("1ae2ab3bc4cd5de");
+  EXPECT_EQ(-1, identifyDiagram(g));
+}
+
 }

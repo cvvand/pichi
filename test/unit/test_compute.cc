@@ -77,6 +77,12 @@ protected:
     t8.setSlice({-1,-1,1}, data);
     tensors.push_back(t8);
 
+    Tensor t9(2,2);
+    data[0] = 6.0; data[1] = 3.0;
+    data[2] = -67.0; data[3] = -1.0;
+    t9.setSlice({-1,-1},data);
+    tensors.push_back(t9);
+
   }
 
   vector<Tensor> tensors;
@@ -126,6 +132,12 @@ TEST_F(ComputeTest, Diagram7) {
 TEST_F(ComputeTest, Diagram8) {
   cdouble r[1]; contract(Graph("4adc5aec7efg6fgd"),tensors).getSlice({0},r);
   EXPECT_EQ(-499.0, r[0]);
+}
+
+TEST_F(ComputeTest, UnknownDiagram) {
+  cdouble r[1];
+  EXPECT_THROW(contract(Graph("1ae2ab3bc4cd9de"),tensors).getSlice({0},r),
+               invalid_argument);
 }
 
 }
