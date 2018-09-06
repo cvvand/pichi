@@ -29,4 +29,15 @@ TEST(GraphSplit, TwoDisconnectedSingleNodeGraphs) {
   EXPECT_EQ(r[1], Graph("2bc"));
 }
 
+TEST(GraphSplit, TwoConnectedNodesAndOneNodeWithNoConnections) {
+  Graph g("0ab1ab");
+  g.addNode(2,0);
+  vector<Graph> r = g.splitToConnected();
+
+  ASSERT_EQ(2, r.size());
+
+  EXPECT_EQ(r[0], Graph("0ab1ab"));
+  EXPECT_EQ(r[1], Graph("2"));
+}
+
 }

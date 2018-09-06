@@ -26,12 +26,6 @@ TEST(ContractErrors, SingleTensorErrorIfContractedAreOutOfRank) {
   EXPECT_THROW(contract(t,{{-1,1},{2,4}}), invalid_argument);
 }
 
-TEST(ContractErrors, SingleTensorErrorIfNoContractedIndices) {
-  Tensor t(4,2);
-  EXPECT_THROW(contract(t,{}), invalid_argument);
-}
-
-
 TEST(ContractErrors, TwoTensorErrorIfTooManyContractedIndices) {
   Tensor t1(2,2);
   Tensor t2(2,2);

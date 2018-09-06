@@ -113,6 +113,9 @@ void setStorage(Tensor& tensor, const std::vector<int> slicing) {
 
 Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
 
+  if (idx.empty()) // No contractions: return input tensor unmodified.
+    return tensor;
+
   // Find the output rank and size;
   int rank = tensor.getRank() - 2*idx.size();
   int size = tensor.getSize();

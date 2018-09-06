@@ -106,30 +106,32 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    //Tensor a(3, SIZE);
-    //Tensor b(3, SIZE);
-    Tensor c(2, SIZE);
-    Tensor d(2, SIZE);
+    Tensor a(3, SIZE);
+    Tensor b(3, SIZE);
+    Tensor c(3, SIZE);
+    Tensor d(3, SIZE);
     //Tensor e(4, SIZE);
     //Tensor f(4, SIZE);
 
-    //fill3(a);
-    //fill3(b);
-    fill2(c);
-    fill2(d);
+    fill3(a);
+    fill3(b);
+    fill3(c);
+    fill3(d);
     //fill4(e);
     //fill4(f);
+
+
 
     auto start = chrono::steady_clock::now();
 
     //f.setStorage({2,3,1,0});
     //e.setStorage({2,3,1,0});
 
-    Tensor t1 = contract(c,d, {{0,0},{1,1}});
-    //Tensor t2 = contract(t1,b, {{0,0},{1,1},{2,2}});
-    //Tensor t3 = contract(t2,d, {{0,1},{1,0}});
-    //cdouble r[1];
-    //t2.getSlice({0}, r);
+    Tensor t1 = contract(a,b, {{0,0},{1,1}});
+    Tensor t2 = contract(c,d, {{0,0},{1,1}});
+    Tensor t3 = contract(t1,t2, {{0,0},{1,1}});
+    cdouble r[1];
+    t3.getSlice({0}, r);
 
     auto end = chrono::steady_clock::now();
 

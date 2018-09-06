@@ -11,6 +11,20 @@ using namespace std;
 namespace {
 
 
+TEST(Contract, NoneSingleTensor) {
+  Tensor t1(2,2);
+  cdouble data[4];
+  data[0] = 3.0; data[1] = 3.0; data[2] = 3.0; data[3] = -1.0;
+  t1.setSlice({-1,-1},data);
+
+  Tensor t = contract(t1,{});
+  EXPECT_EQ(2, t.getRank());
+  EXPECT_EQ(2, t.getSize());
+  cdouble res_data[4]; t.getSlice({-1,-1},res_data);
+  EXPECT_EQ(3.0, res_data[0]); EXPECT_EQ(3.0, res_data[1]);
+  EXPECT_EQ(3.0, res_data[2]); EXPECT_EQ(-1.0, res_data[3]);
+}
+
 TEST(Contract, aa) {
   Tensor t1(2,2);
   cdouble data[4];
