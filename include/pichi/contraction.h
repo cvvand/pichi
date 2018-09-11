@@ -2,7 +2,6 @@
 #define PICHI_CONTRACTION_H
 
 #include "tensor.h"
-#include "op_tensor.h"
 #include "graph.h"
 #include <unordered_map>
 #include <queue>
@@ -70,11 +69,6 @@ Tensor contract(Tensor& tensor1, Tensor& tensor2,
  * connected parts.
  */
 Tensor contract(const Graph&, std::vector<Tensor>&);
-
-
-
-Tensor contract(OPTensor& tensor1, OPTensor& tensor2,
-                const std::vector<std::pair<int, int>>& idx);
 
 
 }

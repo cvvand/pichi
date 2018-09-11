@@ -36,7 +36,6 @@ add_library(pichi
         lib/diagrams.cc
         lib/double_slice_iterator.cc
         lib/graph.cc
-        lib/op_tensor.cc
         lib/single_slice_iterator.cc
         lib/string_utils.cc
         lib/tensor.cc
@@ -123,7 +122,6 @@ if(MAKE_UNIT_TESTS)
           test/unit/test_graph.cc
           test/unit/test_graph_split.cc
           test/unit/test_identify.cc
-          test/unit/test_optensor.cc
           test/unit/test_single_slice_iterator.cc
           test/unit/test_string_utils.cc
           test/unit/test_tensor.cc
