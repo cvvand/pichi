@@ -163,6 +163,29 @@ Tensor::~Tensor() {
 }
 
 
+Tensor Tensor::operator+(pichi::Tensor& other) {
+
+  // Check that tensors can be added
+  if (dim != other.dim)
+    throw invalid_argument("Cannot add tensors with non-equal rank.");
+  if (n != other.n)
+    throw invalid_argument("Cannot add tensors with non-equal size.");
+
+  Tensor t(dim,n);
+
+  int total_size = 1;
+  for (int i = 0; i < dim; ++i)
+    total_size *= n;
+
+  other.setStorage(storage);
+
+  for (int i = 0; i < total_size; ++i)
+   t.data[i] = data[i] + other.data[i];
+  return t;
+}
+
+
+
 void Tensor::conj() {
   int total_size = 1;
   for (int i = 0; i < dim; ++i)

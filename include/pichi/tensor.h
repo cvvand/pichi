@@ -114,6 +114,18 @@ public:
    */
   ~Tensor() noexcept;
 
+  // --- Algebra ---------------------------------------------------------
+
+  /*
+   * Adds another tensor to this one,.The two operands must have exactly
+   * the same dimension and size, and the resulting tensor is the elementwise
+   * addition of the two operands.
+   * During this call, the 'other' tensor will have its internal data
+   * reordered to match this tensors data ordering to facilitate the addition
+   * operations.
+   */
+  Tensor operator+(Tensor&);
+
   // --- Math ------------------------------------------------------------
 
   /*

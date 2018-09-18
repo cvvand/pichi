@@ -125,6 +125,7 @@ if(MAKE_UNIT_TESTS)
           test/unit/test_single_slice_iterator.cc
           test/unit/test_string_utils.cc
           test/unit/test_tensor.cc
+          test/unit/test_tensor_addition.cc
           test/unit/test_tensor_getsetslice.cc
           test/unit/test_tensor_storage.cc
           )
