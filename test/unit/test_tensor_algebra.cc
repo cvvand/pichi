@@ -110,4 +110,29 @@ TEST(TensorAdd, ErrorOnNonEqualSize) {
   EXPECT_THROW(t1+t2, invalid_argument);
 }
 
+
+
+TEST(TensorTimesScalar, DefualtTimes) {
+  Tensor t1;
+  Tensor t2 = t1*2.0;
+  ASSERT_EQ(0, t2.getRank());
+  ASSERT_EQ(1, t2.getSize());
+  cdouble buff[1]; t2.getSlice({0},buff);
+  EXPECT_EQ(0.0, buff[0]);
+}
+
+TEST(TensorTimesScalar, Rank2Times) {
+  Tensor t1(2,2);
+  cdouble buff[4] = {0.0,1.0,2.0,3.0};
+  t1.setSlice({-1,-1},buff);
+  Tensor t2 = 2.0*t1;
+  ASSERT_EQ(2, t2.getRank());
+  ASSERT_EQ(2, t2.getSize());
+  t2.getSlice({-1,-1},buff);
+  EXPECT_EQ(0.0, buff[0]);
+  EXPECT_EQ(2.0, buff[1]);
+  EXPECT_EQ(4.0, buff[2]);
+  EXPECT_EQ(6.0, buff[3]);
+}
+
 }

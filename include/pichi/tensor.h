@@ -114,17 +114,26 @@ public:
    */
   ~Tensor() noexcept;
 
+
+
   // --- Algebra ---------------------------------------------------------
 
   /*
-   * Adds another tensor to this one,.The two operands must have exactly
+   * Adds two tensors.The two operands must have exactly
    * the same dimension and size, and the resulting tensor is the elementwise
    * addition of the two operands.
-   * During this call, the 'other' tensor will have its internal data
-   * reordered to match this tensors data ordering to facilitate the addition
+   * During this call, the rhs tensor will have its internal data
+   * reordered to match the lhs tensor's data ordering to facilitate the addition
    * operations.
    */
-  Tensor operator+(Tensor&);
+  friend Tensor operator+(const Tensor& lhs, Tensor& rhs);
+
+
+  /*
+   * Multiply the tensor with a scalar. This returns the tensor with every
+   * element in the tensor multiplied by the scalar value.
+   */
+  friend Tensor operator*(const Tensor& lhs, cdouble rhs);
 
   // --- Math ------------------------------------------------------------
 
@@ -243,6 +252,11 @@ private: // --------------------------------------------------------------
   /* Storage information on data */
   std::vector<int> storage;
 };
+
+Tensor operator*(cdouble lhs, const Tensor& rhs);
+
+
+
 
 }
 
