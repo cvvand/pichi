@@ -150,7 +150,7 @@ TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsInvalid) {
 }
 
 TEST(SingleIteratorErrorHandling, ErrorIfContractionIndexIsRepeated) {
-  EXPECT_THROW(SingleSliceIterator(Tensor(6,64),{{0,4},{0,1}}),
+  EXPECT_THROW(SingleSliceIterator(Tensor(4,64),{{0,3},{0,1}}),
                invalid_argument);
 }
 

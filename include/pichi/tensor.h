@@ -24,15 +24,14 @@ namespace pichi {
  *
  * We interact with tensors in "slices". A slice is a 2-dimensional
  * piece of the tensor, which we can access and modify. This allows us to
- * "extract a matrix from a tensor", enabling the use of highly optimised
+ * "extract" a matrix from a tensor, enabling the use of highly optimised
  * linear algebra code for doing tensor contractions.
- * A slice is identified by a vector of numbers. If we have a rank 5 tensor
+ * A slice is identified by a tuple of numbers. If we have a rank 5 tensor
  * of size 12, a possible "slice" of the tensor is
  *    (3, 11, *, 0, *)
  * The numbers in the tuple define the "fixed" indices of the tensor, while
  * the asterisks define the "running" indices.
  * For 2-dimensional tensors, the slices are simply the entire tensor.
- * For tensors of rank 3 or more, only 2-dimensional slices and be accessed.
  *
  * "Under the hood" the data in the tensor is stored in a single array. When
  * accessing a slice of the tensor, it is not always possible to simply copy
@@ -41,7 +40,7 @@ namespace pichi {
  * For a rank 4 tensor, the following example "storage tensor"
  *   (2,3,0,1)
  * indicates that the leading dimension of the tensor is dimension 2, then 3
- * etc. This means that it is particularly easy to obtain the slices
+ * etc. This means that it is particularly easy to obtain the slice
  * (0,0,*,*) (and similarly with 0 changed to something else) since they are
  * already in the leading dimension of the underlying data array.
  * Default storage is (0,1,...,R-1), where R is the tensor rank.
@@ -76,16 +75,14 @@ public:
   /*
    * Copy constructor
    * Makes a deep copy of the input tensor. After the copying, the data of
-   * the two tensors will point to two different addresses. The input tensor
-   * is not modified.
+   * the two tensors will point to two different addresses.
    */
   Tensor(const Tensor&);
 
   /*
    * Move constructor
    * Moves the data from the input tensor to a new one. The input vector will
-   * be rank 0 after the call finished and the data will
-   * point to NULL.
+   * be a default tensor (rank 0, value 0) after the call.
    */
   Tensor(Tensor&&) noexcept;
 
@@ -93,9 +90,8 @@ public:
    * Copy assignment
    * Copies the data and layout of the input tensor into this one. This
    * will also change the rank of this tensor to be equal to that of
-   * the input. The data of the input vector is copied in a deep way, meaning
-   * that after the call, the data pointers will point to two different
-   * addresses. The input tensor is not modified.
+   * the input. After the call, the data pointers will point to two different
+   * addresses.
    */
   Tensor& operator=(const Tensor&);
 
@@ -122,18 +118,17 @@ public:
    * Adds two tensors.The two operands must have exactly
    * the same dimension and size, and the resulting tensor is the elementwise
    * addition of the two operands.
-   * During this call, the rhs tensor will have its internal data
-   * reordered to match the lhs tensor's data ordering to facilitate the addition
-   * operations.
    */
-  friend Tensor operator+(const Tensor& lhs, Tensor& rhs);
-
+  friend Tensor operator+(const Tensor& lhs, const Tensor& rhs);
+  Tensor& operator+=(const Tensor&);
 
   /*
    * Multiply the tensor with a scalar. This returns the tensor with every
    * element in the tensor multiplied by the scalar value.
    */
   friend Tensor operator*(const Tensor& lhs, cdouble rhs);
+  friend Tensor operator*(cdouble lhs, const Tensor& rhs);
+  Tensor& operator*=(cdouble);
 
   // --- Math ------------------------------------------------------------
 
@@ -167,7 +162,7 @@ public:
    * the leading dimensions of the tensor, the functions will be able to copy
    * a large segment of the underlying data structure in one go and the call
    * will return more quickly. Consider setting the storage vector
-   * appropriately before a getting a number of slices along the same
+   * appropriately before a getting/setting a number of slices along the same
    * dimensions.
    *
    *
@@ -245,6 +240,7 @@ private: // --------------------------------------------------------------
   /* The dimensions of the tensor */
   int dim;
   int n;
+  long long int total_size;
 
   /* The actual data in the tensor */
   cdouble* data;
@@ -252,11 +248,6 @@ private: // --------------------------------------------------------------
   /* Storage information on data */
   std::vector<int> storage;
 };
-
-Tensor operator*(cdouble lhs, const Tensor& rhs);
-
-
-
 
 }
 

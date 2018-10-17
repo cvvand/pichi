@@ -429,7 +429,7 @@ TEST(DoubleIteratorErrorHandling, ErrorIfContractionIndexIsInvalid) {
 }
 
 TEST(DoubleIteratorErrorHandling, ErrorIfContractionIndexIsRepeated) {
-  EXPECT_THROW(DoubleSliceIterator(Tensor(2,64), Tensor(6,64),{{0,4},{0,1}})
+  EXPECT_THROW(DoubleSliceIterator(Tensor(2,64), Tensor(4,64),{{0,3},{0,1}})
   , invalid_argument);
 }
 

@@ -16,17 +16,19 @@ namespace pichi {
 void Tensor::init(int rank, int size) {
 
   if (rank == 1) {
-    throw invalid_argument("Rank 1 tensors are not allowed");
+    throw invalid_argument("Error in Tensor initialisation: Rank 1 tensors are "
+                           "not allowed");
   }
   if (rank != 0 && size < 2) {
-    throw invalid_argument("Tensor size must be at least 2");
+    throw invalid_argument("Error in Tensor initialisation: Tensor size must "
+                           "be at least 2");
   }
 
   dim = rank;
   n = size;
 
   // Get the total number of components of the tensor ( size^rank )
-  int total_size = 1;
+  total_size = 1;
   for (int i = 0; i < rank; ++i)
     total_size *= size;
 
@@ -38,7 +40,7 @@ void Tensor::init(int rank, int size) {
 
 /*
  * Default constructor implementation
- * Creates a 2x2 tensor and initialises everything to 0.
+ * Creates a scalar with value 0.
  */
 Tensor::Tensor() {
 
@@ -68,13 +70,16 @@ Tensor::Tensor(int rank, int size, const std::vector<int>& store) {
 
   // Check storage
   if (store.size() != dim)
-    throw invalid_argument("Storage vector size must be equal to tensor rank");
+    throw invalid_argument("Error in Tensor constructor: Storage vector size "
+                           "must be equal to tensor rank");
   unordered_set<int> seen;
   for (int i : store) {
     if (i < 0 || i >= dim)
-      throw invalid_argument("Storage vector contains an invalid index");
+      throw invalid_argument("Error in Tensor constructor: Storage vector "
+                             "contains an invalid index");
     if (!seen.insert(i).second)
-      throw invalid_argument("Store vector contains a repeated index");
+      throw invalid_argument("Error in Tensor constructor: Store vector "
+                             "contains a repeated index");
   }
   storage = store;
 }
@@ -84,16 +89,11 @@ Tensor::Tensor(int rank, int size, const std::vector<int>& store) {
  * Makes a deep copy of the input tensor.
  */
 Tensor::Tensor(const Tensor& other) :
-    dim(other.dim), n(other.n) {
-
-  // Having copied the dimensions, calculate the total size of the tensor.
-  int size = 1;
-  for (int i = 0; i < dim; i++)
-    size *= n;
+    dim(other.dim), n(other.n), total_size(other.total_size) {
 
   // Allocate the space for the data and copy the numbers from the input tensor.
-  data = new cdouble[size];
-  std::copy(other.data, other.data + size, data);
+  data = new cdouble[total_size];
+  std::copy(other.data, other.data + total_size, data);
 
   // Copy storage information
   storage = other.storage;
@@ -108,6 +108,7 @@ Tensor::Tensor(Tensor&& other) noexcept {
   // Get the dimensions from the input.
   dim = other.dim;
   n = other.n;
+  total_size = other.total_size;
   // Simply grab the data pointer.
   data = other.data;
 
@@ -131,6 +132,7 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
   // Get the right dimensions from the input.
   dim = other.dim;
   n = other.n;
+  total_size = other.total_size;
 
   // Copy storage data
   storage = other.storage;
@@ -163,39 +165,55 @@ Tensor::~Tensor() {
 }
 
 
-Tensor operator+(const Tensor& lhs, Tensor& rhs) {
+/*
+ * Tensor addition
+ */
+Tensor operator+(const Tensor& lhs, const Tensor& rhs) {
+  // Simply use the += operator
+  Tensor ret(lhs);
+  return ret+=rhs;
+}
 
-  // Check that tensors can be added
-  if (lhs.dim != rhs.dim)
-    throw invalid_argument("Cannot add tensors with non-equal rank.");
-  if (lhs.n != rhs.n)
-    throw invalid_argument("Cannot add tensors with non-equal size.");
+Tensor& Tensor::operator+=(const Tensor& other) {
+  // Check that tensors have equal layout
+  if (dim != other.dim || n != other.n) {
+    throw invalid_argument("Error in Tensor addition: Tensors must have equal"
+                           " size and rank");
+  }
 
-  Tensor t(lhs.dim,lhs.n);
-
-  int total_size = 1;
-  for (int i = 0; i < lhs.dim; ++i)
-    total_size *= lhs.n;
-
-  rhs.setStorage(lhs.storage);
-
-  for (int i = 0; i < total_size; ++i)
-   t.data[i] = lhs.data[i] + rhs.data[i];
-  return t;
+  // Check for storage conflicts
+  if (other.storage == storage) {
+    // The storage lines up, so addition is easily done element by element
+    for (int i = 0; i < total_size; ++i)
+      data[i] += other.data[i];
+  }
+  else {
+    // Storage does not line up. Create a copy, set the correct storage and add
+    Tensor copy(other);
+    copy.setStorage(storage);
+    for (int i = 0; i < total_size; ++i)
+      data[i] += copy.data[i];
+  }
+  return *this;
 }
 
 
-Tensor operator*(const Tensor& lhs, cdouble rhs) {
-  Tensor res(lhs);
+/*
+ * Scaling (multiplication by a scalar)
+ */
+Tensor& Tensor::operator*=(cdouble scalar) {
 
-  int total_size = 1;
-  for (int i = 0; i < res.dim; ++i)
-    total_size *= res.n;
-
+  // Multiply each element by the scalar
   for (int i = 0; i < total_size; ++i)
-    res.data[i] *= rhs;
+    data[i] *= scalar;
 
-  return res;
+  return *this;
+}
+
+Tensor operator*(const Tensor& lhs, cdouble rhs) {
+  // Use the *= operator
+  Tensor res(lhs);
+  return res*=rhs;
 
 }
 
@@ -203,9 +221,6 @@ Tensor operator*(cdouble lhs, const Tensor& rhs) {return rhs*lhs;}
 
 
 void Tensor::conj() {
-  int total_size = 1;
-  for (int i = 0; i < dim; ++i)
-    total_size *= n;
   for (int i = 0; i < total_size; ++i)
     data[i] = std::conj(data[i]);
 }
@@ -243,16 +258,17 @@ bool Tensor::getSlice(const std::vector<int>& slice, cdouble * buff) const {
 
   // Check slice
   if (slice.size() != dim)
-    throw invalid_argument("Slice size must be equal to tensor rank");
+    throw invalid_argument("Error in Tensor::getSlice: Slice size must be "
+                           "equal to tensor rank");
   int count = 0;
   for (int i : slice) {
     if (i >= n)
-      throw invalid_argument("Invalid index in slice");
+      throw invalid_argument("Error in Tensor::getSlice: Invalid index in slice");
     if (i < 0 && ++count == 3)
-      throw invalid_argument("Too many running indices");
+      throw invalid_argument("Error in Tensor::getSlice: Too many running indices");
   }
   if (count < 2) {
-    throw invalid_argument("Too few running indices");
+    throw invalid_argument("Error in Tensor::getSlice: Too few running indices");
   }
 
   // Check if the data is correctly aligned:
@@ -329,16 +345,17 @@ void Tensor::setSlice(const std::vector<int>& slice, const cdouble * buff,
 
   // Check slice
   if (slice.size() != dim)
-    throw invalid_argument("Slice size must be equal to tensor rank");
+    throw invalid_argument("Error in Tensor::setSlice: Slice size must be "
+                           "equal to tensor rank");
   int count = 0;
   for (int i : slice) {
     if (i >= n)
-      throw invalid_argument("Invalid index in slice");
+      throw invalid_argument("Error in Tensor::setSlice: Invalid index in slice");
     if (i < 0 && ++count == 3)
-      throw invalid_argument("Too many running indices");
+      throw invalid_argument("Error in Tensor::setSlice: Too many running indices");
   }
   if (count < 2) {
-    throw invalid_argument("Too few running indices");
+    throw invalid_argument("Error in Tensor::setSlice: Too few running indices");
   }
 
   // Check if the data is correctly aligned:
@@ -433,22 +450,19 @@ vector<int> Tensor::getStorage() const {
 void Tensor::setStorage(const std::vector<int>& store) {
   // Check input
   if (store.size() != dim)
-    throw invalid_argument("Store vector size must be equal to tensor rank");
+    throw invalid_argument("Error in Tensor::setStorage: Store vector size "
+                           "must be equal to tensor rank");
   unordered_set<int> seen;
   for (int i : store) {
     if (i < 0 || i >= dim)
-      throw invalid_argument("Storage vector contains an invalid index");
+      throw invalid_argument("Error in Tensor::setStorage: Storage vector contains an invalid index");
     if (!seen.insert(i).second)
-      throw invalid_argument("Store vector contains a repeated index");
+      throw invalid_argument("Error in Tensor::setStorage: Store vector contains a repeated index");
   }
 
   // Check that the storage is different
   if (store != storage) {
     // Create a new data array and assign with new storage info
-    int total_size = 1;
-    for (int i = 0; i < dim; ++i)
-      total_size *= n;
-
     cdouble *ndata = new cdouble[total_size];
     vector<int> index(dim, 0);
     bool flag = false;
