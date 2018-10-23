@@ -632,5 +632,35 @@ TEST(Contract, abcd_dce_eba) {
 
 }
 
+TEST(Contract, aabc_bc) {
+  Tensor t1(4,2);
+  cdouble data[4];
+  data[0] = 2.0; data[1] = 3.0;
+  data[2] = 3.0; data[3] = -1.0;
+  t1.setSlice({-1,-1,0,0}, data);
+  data[0] = -2.0; data[1] = 1.0;
+  data[2] = 5.0;  data[3] = 1.0;
+  t1.setSlice({-1,-1,1,0}, data);
+  data[0] = 1.0; data[1] = -1.0;
+  data[2] = 1.0; data[3] = -1.0;
+  t1.setSlice({-1,-1,0,1}, data);
+  data[0] = -2.0; data[1] = 2.0;
+  data[2] = -5.0;  data[3] = 3.0;
+  t1.setSlice({-1,-1,1,1}, data);
+
+
+  Tensor t3(2,2);
+  data[0] = 1.0; data[1] = -3.0;
+  data[2] = 2.0; data[3] = -1.0;
+  t3.setSlice({-1,-1}, data);
+
+  Tensor t4 = contract(t1,{{0,1}});
+  Tensor t5 = contract(t4,t3, {{0,0},{1,1}});
+  cdouble datar[1];
+  t5.getSlice({0},datar);
+  EXPECT_EQ(3.0, datar[0]);
+
+}
+
 
 }

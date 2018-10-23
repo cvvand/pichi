@@ -20,6 +20,8 @@ int identifyDiagram(const Graph& graph);
  * it would reduce the diagram into another, lower level diagram. An example
  * could be evaluating one of the contractions in diagram 3 in order to end
  * up in diagram 2.
+ * Unknown diagrams are not reduced systematically but by a greedy (and
+ * highly suboptimal) approach.
  * The input graph is not modified. The suggested extracted subgraph is
  * returned.
  */

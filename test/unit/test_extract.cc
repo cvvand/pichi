@@ -211,4 +211,24 @@ TEST(Extract, Diagram8) {
   EXPECT_EQ(make_pair(5,2), c[2]);
 }
 
+TEST(Extract, UnknownSelfConnected) {
+  Graph g("1aabc");
+  Graph h = extract(g,-1);
+  EXPECT_EQ(g,h);
+}
+
+TEST(Extract, UnknownSelfConnectedWithOtherConnection) {
+  Graph g("1aabc2bc");
+  Graph h = extract(g,-1);
+  Graph exp("1aabc");
+  EXPECT_EQ(exp,h);
+}
+
+TEST(Extract, UnknownConnected) {
+  Graph g("1abcd2ab3cd");
+  Graph h = extract(g,-1);
+  Graph exp("1abcd2ab");
+  EXPECT_EQ(exp,h);
+}
+
 }

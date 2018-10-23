@@ -15,6 +15,11 @@ TEST(IdentifyDiagram, Diagram0) {
   EXPECT_EQ(0, identifyDiagram(g));
 }
 
+TEST(IdentifyDiagram, SingleUnconnectedRank2Unknown) {
+  Graph g("4ab");
+  EXPECT_EQ(-1, identifyDiagram(g));
+}
+
 TEST(IdentifyDiagram, Diagram1) {
   Graph g("4gd12dg");
   EXPECT_EQ(1, identifyDiagram(g));
@@ -55,8 +60,18 @@ TEST(IdentifyDiagram, Diagram8) {
   EXPECT_EQ(8, identifyDiagram(g));
 }
 
-TEST(IdentifyDiagram, UnknownDiagram) {
+TEST(IdentifyDiagram, FiveTensorsUnknownDiagram) {
   Graph g("1ae2ab3bc4cd5de");
+  EXPECT_EQ(-1, identifyDiagram(g));
+}
+
+TEST(IdentifyDiagram, Rank4TensorUnknown) {
+  Graph g("1abcd2abee3cd");
+  EXPECT_EQ(-1, identifyDiagram(g));
+}
+
+TEST(IdentifyDiagram, DisconnectedUnknown) {
+  Graph g("1aa3cc");
   EXPECT_EQ(-1, identifyDiagram(g));
 }
 
