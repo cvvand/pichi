@@ -4,6 +4,8 @@ project(pichi)
 set(CMAKE_CXX_STANDARD 11)
 
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # --- Armadillo ----------------------------------------------------
 
 
