@@ -7,17 +7,12 @@ set(CMAKE_CXX_STANDARD 11)
 # --- Armadillo ----------------------------------------------------
 
 
-set(ARMA_PATH "default" CACHE STRING "Path to Armadillo")
-if(ARMA_PATH STREQUAL "default")
-  # If Armadillo is in standard position, just load it
+if(NOT DEFINED Armadillo_DIR)
   find_package(Armadillo REQUIRED)
   include_directories(${ARMADILLO_INCLUDE_DIRS})
 else()
-  # Set custom include and link directories
-  include_directories(${ARMA_PATH}/include)
-  link_directories(${ARMA_PATH}/lib)
-  # Set the correct value of the Armadillo libs
-  set(ARMADILLO_LIBRARIES armadillo)
+  find_package(Armadillo CONFIG REQUIRED)
+  include_directories(${ARMADILLO_INCLUDE_DIRS})
 endif()
 
 
@@ -132,5 +127,7 @@ if(MAKE_UNIT_TESTS)
 
   target_link_libraries(all_ut gtest_main pichi)
   add_test(NAME unit_tests COMMAND all_ut)
+
+  install(TARGETS all_ut RUNTIME DESTINATION bin)
 
 endif()
