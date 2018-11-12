@@ -111,10 +111,12 @@ void setStorage(Tensor& tensor, const std::vector<int> slicing) {
 
 }
 
-Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
-
-  if (idx.empty()) // No contractions: return input tensor unmodified.
-    return tensor;
+void contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx,
+              Tensor& out) {
+  if (idx.empty()) { // No contractions: return input tensor unmodified.
+    out = tensor;
+    return;
+  }
 
   // Find the output rank and size;
   int rank = tensor.getRank() - 2*idx.size();
@@ -148,10 +150,10 @@ Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
     else
       storage_out[count2++] = i;
   }
-  Tensor tout(rank, size, storage_out);
+  out.resize(rank,size, storage_out);
 
   cdouble data[tensor.getSize()*tensor.getSize()];
-  cdouble data_out[tout.getSize() * tout.getSize()];
+  cdouble data_out[out.getSize() * out.getSize()];
 
 
   do { // Loop over non-sliced free indices on the output tensor
@@ -179,16 +181,15 @@ Tensor contract(Tensor& tensor, const std::vector<std::pair<int,int>>& idx) {
     } while (it.nextSlicedFree());
 
     // Set the current slice of the output tensor
-    tout.setSlice(it.getSliceOut(), data_out);
+    out.setSlice(it.getSliceOut(), data_out);
 
   } while (it.nextNonSlicedFree());
 
-  return tout;
 }
 
 
-Tensor contract(Tensor& t1, Tensor& t2,
-                const std::vector<std::pair<int, int>>& idx) {
+void contract(Tensor& t1, Tensor& t2,
+                const std::vector<std::pair<int, int>>& idx, Tensor& out) {
 
   // Check that there are contracted indices
   if (idx.empty())
@@ -243,7 +244,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
     else
       storage_out[count2++] = i;
   }
-  Tensor tout(rank, size, storage_out);
+  out.resize(rank, size, storage_out);
 
   // Detect whether transposition is needed (sliced indices will not change
   // during iteration)
@@ -252,7 +253,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
   // Containers for the data for matrix multiplication
   cdouble data1[t1.getSize()*t1.getSize()];
   cdouble data2[t2.getSize()*t2.getSize()];
-  cdouble data_out[tout.getSize() * tout.getSize()];
+  cdouble data_out[out.getSize() * out.getSize()];
 
   do { // Loop through free indices, not sliced on the output tensor
 
@@ -316,7 +317,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
       } while (it.nextSlicedFree());
 
       // Set the current slice of the output tensor
-      tout.setSlice(it.getSliceOut(), data_out);
+      out.setSlice(it.getSliceOut(), data_out);
 
     } else {
 
@@ -346,7 +347,7 @@ Tensor contract(Tensor& t1, Tensor& t2,
         mout = strans(m2 * m1);
 
       // Set the slice on the output tensor
-      tout.setSlice(it.getSliceOut(), mout.memptr());
+      out.setSlice(it.getSliceOut(), mout.memptr());
 
 
       /* --------- DIRECT BLAS -------
@@ -384,13 +385,10 @@ Tensor contract(Tensor& t1, Tensor& t2,
 
     // Increase the free indices not sliced on the output tensor
   } while (it.nextNonSlicedFree());
-
-  return tout;
-
 }
 
 
-Tensor contract(const Graph& graph, std::vector<Tensor>& tensors) {
+void contract(const Graph& graph, std::vector<Tensor>& tensors, Tensor& out) {
 
   Graph red(graph); // Working copy of the graph
 
@@ -418,7 +416,7 @@ Tensor contract(const Graph& graph, std::vector<Tensor>& tensors) {
       for (auto c : ext.allConnections()) {
         contractions.push_back(make_pair(c.first.second,c.second.second));
       }
-      tout = contract(tensors[tidx], contractions); // Tetraquark ERROR
+      contract(tensors[tidx], contractions,tout); // Tetraquark ERROR
 
     }
     else {
@@ -441,7 +439,7 @@ Tensor contract(const Graph& graph, std::vector<Tensor>& tensors) {
       for (auto c : ext.allConnections()) {
         contractions.push_back(make_pair(c.first.second,c.second.second));
       }
-      tout = contract(*t1,*t2, contractions);
+      contract(*t1,*t2, contractions, tout);
 
     }
 
@@ -451,7 +449,7 @@ Tensor contract(const Graph& graph, std::vector<Tensor>& tensors) {
     red.reduce(ext, idx++);
 
   }
-  return temps[idx-tensors.size()-1];
+  out = temps[idx-tensors.size()-1];
 }
 
 

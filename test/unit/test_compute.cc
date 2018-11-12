@@ -90,53 +90,72 @@ protected:
 };
 
 TEST_F(ComputeTest, Diagram0) {
-  cdouble r[1]; contract(Graph("0aa"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("0aa"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(1.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram1) {
-  cdouble r[1]; contract(Graph("0ab1ab"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("0ab1ab"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(18.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram2) {
-  cdouble r[1]; contract(Graph("0ab2bc1ac"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("0ab2bc1ac"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(57.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram3) {
-  cdouble r[1]; contract(Graph("0ab2dc1ac3bd"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("0ab2dc1ac3bd"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(-102.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram4) {
-  cdouble r[1]; contract(Graph("4abc5abc"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("4abc5abc"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(8.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram5) {
-  cdouble r[1]; contract(Graph("4bdc5abc2da"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("4bdc5abc2da"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(16.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram6) {
-  cdouble r[1]; contract(Graph("4abd7abe0df3ef"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("4abd7abe0df3ef"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(373.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram7) {
-  cdouble r[1]; contract(Graph("4abc5dbe2ae1cd"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("4abc5dbe2ae1cd"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(-32.0, r[0]);
 }
 
 TEST_F(ComputeTest, Diagram8) {
-  cdouble r[1]; contract(Graph("4adc5aec7efg6fgd"),tensors).getSlice({0},r);
+  Tensor res;
+  contract(Graph("4adc5aec7efg6fgd"),tensors,res);
+  cdouble r[1]; res.getSlice({0},r);
   EXPECT_EQ(-499.0, r[0]);
 }
 
 TEST_F(ComputeTest, UnknownDiagram) {
+  Tensor res;
   cdouble r[1];
-  EXPECT_THROW(contract(Graph("1ae2ab3bc4cd9de"),tensors).getSlice({0},r),
+  EXPECT_THROW(contract(Graph("1ae2ab3bc4cd9de"),tensors,res),
                invalid_argument);
 }
 

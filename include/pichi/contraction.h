@@ -47,15 +47,16 @@ namespace pichi {
  * Contracts indices on a single tensor, resulting in a new tensor. If all
  * indices are contracted, the output is a rank 0 tensor.
  */
-Tensor contract(Tensor& tensor,
-                const std::vector<std::pair<int, int>>& idx);
+void contract(Tensor& tensor, const std::vector<std::pair<int, int>>& idx,
+              Tensor& out);
 
 
 /*
  * Contract indices on two tensors. The resulting tensor is returned.
  */
-Tensor contract(Tensor& tensor1, Tensor& tensor2,
-                const std::vector<std::pair<int, int>>& idx);
+void contract(Tensor& tensor1, Tensor& tensor2,
+                const std::vector<std::pair<int, int>>& idx, Tensor& out);
+
 
 /*
  * Compute a completely contracted, known diagram, represented by a graph.
@@ -68,7 +69,7 @@ Tensor contract(Tensor& tensor1, Tensor& tensor2,
  * If the diagram is not connected the result will be the sum of the
  * connected parts.
  */
-Tensor contract(const Graph&, std::vector<Tensor>&);
+void contract(const Graph&, std::vector<Tensor>&, Tensor& out);
 
 
 }
