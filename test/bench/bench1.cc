@@ -11,9 +11,9 @@
 #include <iomanip>
 #include <chrono>
 
-#define N 100
-#define P 5
-#define SIZE 64
+#define N 10
+#define P 3
+#define SIZE 16
 
 using namespace pichi;
 using namespace std;
@@ -106,34 +106,53 @@ int main() {
 
   for (int i = -P; i < N; ++i) {
 
-    Tensor a(3, SIZE);
-    Tensor b(3, SIZE);
-    Tensor c(3, SIZE);
-    Tensor d(3, SIZE);
+    //Tensor a(2, SIZE);
+    //Tensor b(2, SIZE);
+    //Tensor c(3, SIZE);
+    //Tensor d(3, SIZE);
     //Tensor e(4, SIZE);
     //Tensor f(4, SIZE);
 
-    fill3(a);
-    fill3(b);
-    fill3(c);
-    fill3(d);
+    //fill2(a);
+    //fill2(b);
+    //fill3(c);
+    //fill3(d);
     //fill4(e);
     //fill4(f);
 
 
+    vector<Tensor> tensors(3);
+    tensors[0].resize(2,SIZE);
+    tensors[1].resize(2,SIZE);
+    tensors[2].resize(4,SIZE);
+    fill2(tensors[0]);
+    fill2(tensors[1]);
+    fill4(tensors[2]);
+
+    Graph g("0ab1cd2abcd");
 
     auto start = chrono::steady_clock::now();
 
     //f.setStorage({2,3,1,0});
     //e.setStorage({2,3,1,0});
 
-    Tensor t1 = contract(a,b, {{0,0},{1,1}});
-    Tensor t2 = contract(c,d, {{0,0},{1,1}});
-    Tensor t3 = contract(t1,t2, {{0,0},{1,1}});
+    Tensor res;
+    contract(g,tensors,res);
     cdouble r[1];
-    t3.getSlice({0}, r);
+    res.getSlice({0}, r);
 
     auto end = chrono::steady_clock::now();
+
+    if (i == -P) {
+      // Check correctness
+      Tensor temp1,temp2;
+      contract(tensors[0],tensors[2],{{0,0},{1,1}},temp1);
+      contract(temp1,tensors[1],{{0,0},{1,1}},temp2);
+      cdouble rtemp[1];
+      temp2.getSlice({0},rtemp);
+
+      cout << setprecision(17) << "Error = " << abs(r[0]-rtemp[0]) << endl;
+    }
 
     double et_tot = chrono::duration_cast<
         chrono::duration<double>>(end-start).count();

@@ -17,6 +17,7 @@ int identifyDiagram(const Graph& graph) {
   // Count the node degrees
   int nodes2 = 0;
   int nodes3 = 0;
+  int nodes4 = 0;
   for (int node : graph.getNodes()) {
     // Check that there are no open connections
     auto connections = graph.connections(node);
@@ -28,23 +29,25 @@ int identifyDiagram(const Graph& graph) {
       ++nodes2;
     else if (connections.size() == 3)
       ++nodes3;
+    else if (connections.size() == 4)
+      ++nodes4;
     else
       return -1;
   }
   // We find the correct diagram from the node count.
-  if (nodes2 == 1 && nodes3 == 0)
+  if (nodes2 == 1 && nodes3 == 0 && nodes4 == 0)
     return 0;
-  if (nodes2 == 2 && nodes3 == 0)
+  if (nodes2 == 2 && nodes3 == 0 && nodes4 == 0)
     return 1;
-  if (nodes2 == 3)
+  if (nodes2 == 3 && nodes3 == 0 && nodes4 == 0)
     return 2;
-  if (nodes2 == 4)
+  if (nodes2 == 4 && nodes3 == 0 && nodes4 == 0)
     return 3;
-  if (nodes2 == 0 && nodes3 == 2)
+  if (nodes2 == 0 && nodes3 == 2 && nodes4 == 0)
     return 4;
-  if (nodes2 == 1 && nodes3 == 2)
+  if (nodes2 == 1 && nodes3 == 2 && nodes4 == 0)
     return 5;
-  if (nodes2 == 2 && nodes3 == 2) {
+  if (nodes2 == 2 && nodes3 == 2 && nodes4 == 0) {
     // This can be both diagram 6 and 7
     // We start by getting the first node in the graph
     vector<pair<int,int>> c0 = graph.connections(*graph.getNodes().begin());
@@ -73,8 +76,10 @@ int identifyDiagram(const Graph& graph) {
       return 7;
     }
   }
-  if (nodes3 == 4)
+  if (nodes2 == 0 && nodes3 == 4 && nodes4 == 0)
     return 8;
+  if (nodes2 == 2 && nodes3 == 0 && nodes4 == 1)
+    return 9;
   return -1;
 }
 
@@ -167,55 +172,22 @@ Graph extract(const Graph& graph, int diagram) {
       break;
     }
 
-    default:{ // Unknown diagram
-
-      // Check connections of nodes in order
-      // We take make the diagram from the first node which has a connection
-      // to itself or another node
+    case 9: {
+      // Remove the first node of rank 2
       for (int node : graph.getNodes()) {
-
-        auto conn = graph.connections(node);
-        // Check for connections to self or another node
-        vector<pair<int,int>> self_connections;
-        int other_node = -1;
-        vector<pair<int,int>> other_connections;
-        for (int i = 0; i < conn.size(); ++i) {
-          auto p = conn[i];
-
-          if (p.first == node) // Connection to self
-            self_connections.push_back(make_pair(i,p.second));
-
-          else if (other_node == -1 && p.first != -1) {
-            // First connection to another node
-            other_node = p.first;
-            other_connections.push_back(make_pair(i,p.second));
-          }
-          else if (other_node == p.first) {
-            // New connection to seen node.
-            other_connections.push_back(make_pair(i,p.second));
-          }
-        }
-
-        if (!self_connections.empty()) {
-          // If there are selfcontractions, do those first
-          Graph res;
-          res.addNode(node,conn.size());
-          for (auto p : self_connections)
-            res.connect(node, p.first, node, p.second);
-          ext = res;
-          break;
-        }
-        else if (other_node != -1) {
-          // Contract with other node
-          Graph res;
-          res.addNode(node,conn.size());
-          res.addNode(other_node, graph.connections(other_node).size());
-          for (auto p : other_connections)
-            res.connect(node, p.first, other_node, p.second);
-          ext = res;
+        if (graph.connections(node).size() == 2) {
+          ext.removeNode(node);
           break;
         }
       }
+
+      break;
+    }
+
+    default:{ // Unknown diagram
+
+      throw invalid_argument("Graph::extract: Unknown diagram");
+
     }
 
   }
